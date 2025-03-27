@@ -152,10 +152,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d51b91257ac2c45901b78874bf3ceb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseTracker: {fileID: 676177079}
-  startBtn: {fileID: 0}
+  m_mouseTracker: {fileID: 676177080}
+  m_targetSpawner: {fileID: 676177082}
   startTime: 0
   playing: 0
+  inExporting: 0
+  goal: 25
+  trial: 0
 --- !u!4 &156698504
 Transform:
   m_ObjectHideFlags: 0
@@ -719,13 +722,14 @@ GameObject:
   m_Component:
   - component: {fileID: 676177081}
   - component: {fileID: 676177080}
+  - component: {fileID: 676177082}
   m_Layer: 0
   m_Name: Mouse Tracker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &676177080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -738,11 +742,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d09ab74b871d9d41bcce5413bdce991, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 8802510398557974114, guid: 7e2628bce206c9b4bb9d6a1773da9419, type: 3}
-  displaySizeText: {fileID: 0}
-  mousePosText: {fileID: 0}
-  targetNum: 0
-  margin: 0
+  m_targetSpawner: {fileID: 676177082}
 --- !u!4 &676177081
 Transform:
   m_ObjectHideFlags: 0
@@ -758,6 +758,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &676177082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 676177079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea8c6f2da1ca11c448ba4873aa584a61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 8802510398557974114, guid: 7e2628bce206c9b4bb9d6a1773da9419, type: 3}
+  currentTarget: {fileID: 0}
+  margin: 50
 --- !u!1 &749272592
 GameObject:
   m_ObjectHideFlags: 0
@@ -827,7 +842,7 @@ Canvas:
   m_GameObject: {fileID: 749272592}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -839,7 +854,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -2
   m_TargetDisplay: 0
 --- !u!224 &749272596
 RectTransform:

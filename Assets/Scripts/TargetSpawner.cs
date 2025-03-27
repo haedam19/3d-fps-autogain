@@ -5,7 +5,7 @@ using UnityEngine;
 public class TargetSpawner : MonoBehaviour
 {
     [SerializeField] GameObject target;
-    GameObject currentTarget;
+    [HideInInspector] public GameObject currentTarget;
 
     [Header("Config")]
     [SerializeField] float margin;
@@ -25,7 +25,8 @@ public class TargetSpawner : MonoBehaviour
 
     public Vector2 Spawn()
     {
-        Destroy(currentTarget);
+        if(currentTarget)
+            Destroy(currentTarget);
 
         Vector2 nextCenter;
         while (true)
