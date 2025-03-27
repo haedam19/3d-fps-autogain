@@ -5,27 +5,52 @@ using TMPro;
 
 public class MousePosTracker : MonoBehaviour
 {
-    [SerializeField] TMP_Text displaySizeText;
-    [SerializeField] TMP_Text mousePosText;
+    [SerializeField] TargetSpawner m_targetSpawner;
+
+    [SerializeField] int targetNum;
+    [SerializeField] float margin;
+
+    float previousClickTime;
+
+    Vector2 mousePos;
+    Vector2 currentTargetCenter;
+    float radius;
+
+    Queue<Vector2> mousePosLog;
+    Queue<Vector2> targetPosLog;
 
     private void Awake()
     {
-        if (!displaySizeText)
-            displaySizeText = GameObject.Find("Display Size Text").GetComponent<TMP_Text>();
-        if (!mousePosText)
-            mousePosText = GameObject.Find("Mouse Pos Text").GetComponent<TMP_Text>();
+
     }
-    // Start is called before the first frame update
+
     void Start()
     {
 
-        displaySizeText.text = string.Format("{0} x {1}", Screen.width, Screen.height);
-        mousePosText.text = string.Format("({0}, {1})", (int)(Input.mousePosition.x), (int)(Input.mousePosition.y));
     }
 
     // Update is called once per frame
     void Update()
     {
-        mousePosText.text = string.Format("({0}, {1})", (int)(Input.mousePosition.x), (int)(Input.mousePosition.y));
+        if (!GameManager.Instance.playing)
+            return;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            mousePos = Input.mousePosition;
+            float delta1 = (mousePos - currentTargetCenter).magnitude;
+            float delta2 = Mathf.Max(delta1 - radius, 0f);
+
+        }
+    }
+
+    public void RequestFirstSpawn()
+    {
+        currentTargetCenter = m_targetSpawner.Spawn();
+    }
+
+    public void ExportData()
+    {
+
     }
 }
