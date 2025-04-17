@@ -5,9 +5,9 @@ using System.IO;
 using UnityEngine;
 using TMPro;
 
-public class MousePosTracker : MonoBehaviour
+public class MousePosTracker2D : MonoBehaviour
 {
-    [SerializeField] TargetSpawner m_targetSpawner;
+    [SerializeField] TargetSpawner2D m_targetSpawner;
 
     float previousClickTime;
 
@@ -34,7 +34,7 @@ public class MousePosTracker : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!GameManager.Instance.playing)
+        if (!GameManager2D.Instance.playing)
             return;
 
         if (Input.GetMouseButtonDown(0))
@@ -45,9 +45,9 @@ public class MousePosTracker : MonoBehaviour
 
             mousePosLog.Enqueue(mousePos);
             targetPosLog.Enqueue(targetPos);
-            clickTimeLog.Enqueue(Time.time - GameManager.Instance.startTime);
+            clickTimeLog.Enqueue(Time.time - GameManager2D.Instance.startTime);
 
-            GameManager.Instance.Trial++;
+            GameManager2D.Instance.Trial++;
 
             targetPos = m_targetSpawner.Spawn();                
         }
@@ -68,7 +68,7 @@ public class MousePosTracker : MonoBehaviour
         float e_y = Random.value;
         */
 
-        GameManager.Instance.inExporting = true;
+        GameManager2D.Instance.inExporting = true;
         int count;
         if(mousePosLog.Count == targetPosLog.Count && mousePosLog.Count == clickTimeLog.Count)
         {
@@ -121,7 +121,7 @@ public class MousePosTracker : MonoBehaviour
         StreamWriter outStream = File.CreateText(filePath);
         outStream.WriteLine(sb);
         outStream.Close();
-        GameManager.Instance.inExporting = false;
+        GameManager2D.Instance.inExporting = false;
     }
 
     string GetPath()

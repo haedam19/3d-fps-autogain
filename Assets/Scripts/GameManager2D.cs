@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameManager : MonoBehaviour
+public class GameManager2D : MonoBehaviour
 {
-    static GameManager instance;
-    public static GameManager Instance
+    static GameManager2D instance;
+    public static GameManager2D Instance
     {
         get
         {
@@ -17,8 +17,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    [SerializeField] MousePosTracker m_mouseTracker;
-    [SerializeField] TargetSpawner m_targetSpawner;
+    [SerializeField] MousePosTracker2D m_mouseTracker;
+    [SerializeField] TargetSpawner2D m_targetSpawner;
 
     public float startTime;
     public bool playing;

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TargetSpawner : MonoBehaviour
+public class TargetSpawner2D : MonoBehaviour
 {
     [SerializeField] GameObject target;
     [HideInInspector] public GameObject currentTarget;
