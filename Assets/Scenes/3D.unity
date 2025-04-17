@@ -3904,7 +3904,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1302756235}
   m_Layer: 0
-  m_Name: Demo
+  m_Name: World
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7032,14 +7032,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2073934686}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0930167, y: -0.049402773, z: 0.018754747, w: 0.9942613}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 96155750}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 10.767, y: -5.535, z: 1.639}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2073934690
 MonoBehaviour:
   m_ObjectHideFlags: 64

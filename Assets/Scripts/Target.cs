@@ -12,7 +12,11 @@ public class Target : MonoBehaviour
     public float Radius
     {
         get { return radius; }
-        set { radius = value; transform.localScale = new Vector3(value, value, value); }
+        set
+        {
+            radius = value;
+            transform.localScale = new Vector3(0.1f * value, 0.1f * value, 0.1f * value);
+        }
     }
     public Vector2 posOnScreen;
 
