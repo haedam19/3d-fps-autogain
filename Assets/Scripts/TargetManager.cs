@@ -6,7 +6,7 @@ using UnityEngine;
 public class TargetManager : MonoBehaviour
 {
     Vector2 prevMousePos;
-    Target[] target;
+    Target3D[] target;
 
     // Start is called before the first frame update
     void Start()

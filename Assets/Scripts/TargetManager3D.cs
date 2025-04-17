@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public struct Condition
+{
+    public int A;
+    public int W;
+}
+
 public class TargetManager3D : MonoBehaviour
 {
     Mouse mouse;
@@ -11,11 +17,12 @@ public class TargetManager3D : MonoBehaviour
     [SerializeField] int[] Aset;
     [SerializeField] int[] Wset;
     [SerializeField] int trialPerCondition;
-    [SerializeField] int practice;
-    [SerializeField] int blocks;
+    [SerializeField] int practice; // number of early trials considered to be practices
+    [SerializeField] int blocks; // iterations (1 block = set of all conditions)
 
+    int m_currentTrial;
     int m_currentTarget;
-    int m_A; // Movement distance for each trial 
+    int m_A; // Diameter of the circle which targets are aligned along
     int m_W; // Target width
     List<GameObject> targetInstances;
 
@@ -30,12 +37,23 @@ public class TargetManager3D : MonoBehaviour
         SetTargets(trialPerCondition, Aset[0], Wset[0]);
     }
 
+    public void Initialize()
+    {
+
+    }
+
     // Update is called once per frame
     void Update()
     {
         
     }
 
+    public List<Condition> CreateConditionList()
+    {
+        List<Condition> conditionList = new List<Condition>();
+
+        return conditionList;
+    }
 
     public void SetTargets(int targetCount, int AIndex, int WIndex)
     {
@@ -60,7 +78,7 @@ public class TargetManager3D : MonoBehaviour
             float x = (m_A / 2) * Mathf.Cos(rad);
             float y = (m_A / 2) * Mathf.Sin(rad);
             targetObj.transform.localPosition = new Vector3(x, y, 0f);
-            Target t = targetObj.GetComponent<Target>();
+            Target3D t = targetObj.GetComponent<Target3D>();
             t.Radius = m_W;
             t.posOnScreen = new Vector2(x, y);
 

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Target : MonoBehaviour
+public class Target3D : MonoBehaviour
 {
     [SerializeField] Material m_onMaterial;
     [SerializeField] Material m_offMaterial;
