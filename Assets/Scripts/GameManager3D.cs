@@ -22,12 +22,35 @@ public class GameManager3D : MonoBehaviour
     public bool playing;
     public bool inExporting;
 
+    public ushort conditionIndex;
+    public ushort trialIndex;
+
+    public void Awake()
+    {
+        playing = false;
+        inExporting = false;
+        if (instance == null)
+            instance = this;
+        else
+            Destroy(gameObject);
+
+    }
+
     public void Start()
     {
         
     }
 
-    public void GameStart()
+    /// <summary> Condition 단위의 측정 시작 메소드 </summary>
+    public void TestStart()
+    {
+        playing = true;
+        Cursor.lockState = CursorLockMode.None;
+        startTime = Time.time;
+        Destroy(GameObject.Find("StartMessage"));
+    }
+
+    public void Click()
     {
 
     }

@@ -1,18 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[Serializable]
 public struct Condition
 {
-    public int A;
-    public int W;
+    public int A; // Diameter of the circle which targets are aligned along
+    public int W; // Target width
+
+    public Condition(int a, int w) { A = a; W = w; }
 }
 
 public class TargetManager3D : MonoBehaviour
 {
-    Mouse mouse;
-
     [SerializeField] GameObject targetPrefab;
     [SerializeField] int[] Aset;
     [SerializeField] int[] Wset;
@@ -22,19 +24,15 @@ public class TargetManager3D : MonoBehaviour
 
     int m_currentTrial;
     int m_currentTarget;
-    int m_A; // Diameter of the circle which targets are aligned along
-    int m_W; // Target width
+    int m_A;
+    int m_W;
     List<GameObject> targetInstances;
 
     private void Awake()
     {
-        mouse = Mouse.current;
-
-
         targetInstances = new List<GameObject>();
         float distanceToCamera = 0.1f * Screen.height / (2 * Mathf.Tan(Camera.main.fieldOfView * Mathf.Deg2Rad / 2));
         transform.position = new Vector3(0f, 0f, distanceToCamera);
-        SetTargets(trialPerCondition, Aset[0], Wset[0]);
     }
 
     public void Initialize()
@@ -48,28 +46,47 @@ public class TargetManager3D : MonoBehaviour
         
     }
 
-    public List<Condition> CreateConditionList()
+    public List<Condition> CreateConditionSequence()
     {
         List<Condition> conditionList = new List<Condition>();
+        foreach (int A in Aset)
+        {
+            foreach (int W in Wset)
+                conditionList.Add(new Condition(A, W));
+        }
+
+        // Shuffle COndition Sequence
+        Condition temp;
+        int length = conditionList.Count;
+        int i, j;
+        for (i = 0; i < length; i++)
+        {
+            j = UnityEngine.Random.Range(i, length);
+            temp = conditionList[i];
+            conditionList[i] = conditionList[j];
+            conditionList[j] = temp;
+        }
 
         return conditionList;
     }
 
-    public void SetTargets(int targetCount, int AIndex, int WIndex)
+    public void SetTargets(int targetCount, Condition condition)
     {
-        if (AIndex < 0 || WIndex < 0 || AIndex >= Aset.Length || WIndex >= Wset.Length)
-        {
-            Debug.LogError("Invalid Target Setting: Out of Index Error");
-            return;
-        }
-
-        m_A = Aset[AIndex];
-        m_W = Wset[WIndex];
+        m_A = condition.A;
+        m_W = condition.W;
 
         if (targetInstances == null)
             targetInstances = new List<GameObject>();
         else
-            targetInstances.Clear();
+        {
+            while (targetInstances.Count > 0)
+            {
+                GameObject target = targetInstances[0];
+                targetInstances.RemoveAt(0);
+                Destroy(target);
+            }
+        }
+            
 
         for (int i = 0; i < targetCount; i++)
         {
@@ -88,4 +105,5 @@ public class TargetManager3D : MonoBehaviour
             targetInstances.Add(targetObj);
         }
     }
+
 }
