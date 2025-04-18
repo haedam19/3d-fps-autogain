@@ -2348,6 +2348,96 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1912959281}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &880503412
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 880503415}
+  - component: {fileID: 880503416}
+  - component: {fileID: 880503414}
+  - component: {fileID: 880503413}
+  m_Layer: 0
+  m_Name: Managers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &880503413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880503412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c82c75c5056e7542b79774a84c1685a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetPrefab: {fileID: 2704050834720211060, guid: 5e2248c1d62c500418eaeb5c23b65603,
+    type: 3}
+  startingTargetPrefab: {fileID: 0}
+  targetRoot: {fileID: 1912959280}
+--- !u!114 &880503414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880503412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb958373e08c4404cae16406e0d63d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Aset: 000100008001000000020000
+  Wset: 080000001000000020000000400000006000000080000000
+  trialPerCondition: 0
+  blocks: 0
+  conditionSequence: []
+  conditionIndex: 0
+  blockIndex: 0
+--- !u!4 &880503415
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880503412}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &880503416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880503412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01c6e72eedbff75498edc9ee2bb311ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  envManager: {fileID: 880503414}
+  targetManager: {fileID: 880503413}
+  mousePosTracker: {fileID: 0}
+  playing: 0
+  inExporting: 0
+  startTime: 0
+  trialIndex: 0
+  totalTrialCount: 0
+  errorCount: 0
 --- !u!1001 &901933252
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5484,11 +5574,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPrefab: {fileID: 2704050834720211060, guid: 5e2248c1d62c500418eaeb5c23b65603,
     type: 3}
-  Aset: 000100008001000000020000
-  Wset: 080000001000000020000000400000006000000080000000
-  trialPerCondition: 8
-  practice: 0
-  blocks: 1
+  startingTargetPrefab: {fileID: 0}
+  targetRoot: {fileID: 0}
 --- !u!4 &1768768567
 Transform:
   m_ObjectHideFlags: 0
@@ -7614,3 +7701,4 @@ SceneRoots:
   - {fileID: 1627655678}
   - {fileID: 1768768567}
   - {fileID: 1912959281}
+  - {fileID: 880503415}

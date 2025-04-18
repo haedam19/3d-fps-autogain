@@ -4,23 +4,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[Serializable]
-public struct Condition
-{
-    public int A; // Diameter of the circle which targets are aligned along
-    public int W; // Target width
-
-    public Condition(int a, int w) { A = a; W = w; }
-}
-
 public class TargetManager3D : MonoBehaviour
 {
     [SerializeField] GameObject targetPrefab;
-    [SerializeField] int[] Aset;
-    [SerializeField] int[] Wset;
-    [SerializeField] int trialPerCondition;
-    [SerializeField] int practice; // number of early trials considered to be practices
-    [SerializeField] int blocks; // iterations (1 block = set of all conditions)
+    [SerializeField] GameObject startingTargetPrefab;
+    [SerializeField] GameObject targetRoot;
 
     int m_currentTrial;
     int m_currentTarget;
@@ -28,46 +16,11 @@ public class TargetManager3D : MonoBehaviour
     int m_W;
     List<GameObject> targetInstances;
 
-    private void Awake()
+    public void Init()
     {
         targetInstances = new List<GameObject>();
         float distanceToCamera = 0.1f * Screen.height / (2 * Mathf.Tan(Camera.main.fieldOfView * Mathf.Deg2Rad / 2));
         transform.position = new Vector3(0f, 0f, distanceToCamera);
-    }
-
-    public void Initialize()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    public List<Condition> CreateConditionSequence()
-    {
-        List<Condition> conditionList = new List<Condition>();
-        foreach (int A in Aset)
-        {
-            foreach (int W in Wset)
-                conditionList.Add(new Condition(A, W));
-        }
-
-        // Shuffle COndition Sequence
-        Condition temp;
-        int length = conditionList.Count;
-        int i, j;
-        for (i = 0; i < length; i++)
-        {
-            j = UnityEngine.Random.Range(i, length);
-            temp = conditionList[i];
-            conditionList[i] = conditionList[j];
-            conditionList[j] = temp;
-        }
-
-        return conditionList;
     }
 
     public void SetTargets(int targetCount, Condition condition)
@@ -75,6 +28,7 @@ public class TargetManager3D : MonoBehaviour
         m_A = condition.A;
         m_W = condition.W;
 
+        // Reset
         if (targetInstances == null)
             targetInstances = new List<GameObject>();
         else
@@ -86,7 +40,6 @@ public class TargetManager3D : MonoBehaviour
                 Destroy(target);
             }
         }
-            
 
         for (int i = 0; i < targetCount; i++)
         {
@@ -104,6 +57,10 @@ public class TargetManager3D : MonoBehaviour
             
             targetInstances.Add(targetObj);
         }
+
+        m_currentTarget = 0;
+        GameManager3D.Instance.trialIndex = 0;
+        targetInstances[0].GetComponent<Target3D>().TargetOn();
     }
 
 }

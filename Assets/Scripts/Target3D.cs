@@ -27,12 +27,6 @@ public class Target3D : MonoBehaviour
         TargetOff();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void TargetOn()
     {
         m_renderer.material = m_onMaterial;

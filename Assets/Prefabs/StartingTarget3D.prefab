@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4722866205040442044}
   - component: {fileID: 780788567964251136}
   m_Layer: 0
-  m_Name: Target Sphere
+  m_Name: StartingTarget3D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

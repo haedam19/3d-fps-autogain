@@ -10,8 +10,7 @@ public class MousePosTracker3D : MonoBehaviour
 
     Queue<MouseEvent> mouseLog;
 
-    // Start is called before the first frame update
-    void Start()
+    public void Init()
     {
         mouseLog = new Queue<MouseEvent>();
     }
@@ -36,7 +35,7 @@ public class MousePosTracker3D : MonoBehaviour
         if (Input.GetAxisRaw("Mouse X") == 0f && Input.GetAxisRaw("Mouse Y") == 0f && buttonFlag == 0)
             return;
 
-        mouseLog.Enqueue(new MouseEvent(GameManager3D.Instance.conditionIndex, GameManager3D.Instance.trialIndex
+        mouseLog.Enqueue(new MouseEvent(GameManager3D.Instance.envManager.conditionIndex, GameManager3D.Instance.trialIndex
             , buttonFlag, mousePos.x, mousePos.y, timeStamp));
 
         // Move to Next Trial 

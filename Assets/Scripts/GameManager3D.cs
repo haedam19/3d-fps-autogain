@@ -16,24 +16,38 @@ public class GameManager3D : MonoBehaviour
         }
     }
 
-    [SerializeField] TargetManager3D m_targetManager;
+    [Header("SubManagers")]
+    public EnvManager3D envManager;
+    public TargetManager3D targetManager;
+    public MousePosTracker3D mousePosTracker;
 
-    public float startTime;
+    [Header("GameStatus")]
     public bool playing;
     public bool inExporting;
-
-    public ushort conditionIndex;
+    public float startTime;
     public ushort trialIndex;
+
+    [Header("Statistics")]
+    public int totalTrialCount;
+    public int errorCount;
 
     public void Awake()
     {
-        playing = false;
-        inExporting = false;
         if (instance == null)
+        {
             instance = this;
+            playing = false;
+            inExporting = false;
+            envManager.Init();
+            targetManager.Init();
+            mousePosTracker.Init();
+
+            trialIndex = 0;
+            totalTrialCount = 0;
+            errorCount = 0;
+        }
         else
             Destroy(gameObject);
-
     }
 
     public void Start()
