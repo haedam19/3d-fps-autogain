@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Xml;
 
 public class TargetManager3D : MonoBehaviour
 {
@@ -15,6 +18,7 @@ public class TargetManager3D : MonoBehaviour
     int m_A;
     int m_W;
     List<GameObject> targetInstances;
+    List<int> targetIndexSequence;
 
     public void Init()
     {
@@ -23,7 +27,7 @@ public class TargetManager3D : MonoBehaviour
         transform.position = new Vector3(0f, 0f, distanceToCamera);
     }
 
-    public void SetTargets(int targetCount, Condition condition)
+    public void SetTargets(int targetCount, ConditionConfig condition)
     {
         m_A = condition.A;
         m_W = condition.W;
@@ -44,7 +48,7 @@ public class TargetManager3D : MonoBehaviour
         for (int i = 0; i < targetCount; i++)
         {
             GameObject targetObj = Instantiate(targetPrefab, transform);
-            float rad = (2 * Mathf.PI / targetCount) * i;
+            float rad = (2 * Mathf.PI / targetCount) * i + Mathf.PI / 2f;
             float x = (m_A / 2) * Mathf.Cos(rad);
             float y = (m_A / 2) * Mathf.Sin(rad);
             targetObj.transform.localPosition = new Vector3(x, y, 0f);
@@ -56,6 +60,21 @@ public class TargetManager3D : MonoBehaviour
             targetObj.transform.position = targetObj.transform.position.normalized * transform.position.z;
             
             targetInstances.Add(targetObj);
+        }
+
+        int n = targetCount;
+        bool even = n % 2 == 0;
+        int k = even ? n / 2 : (n + 1) / 2;
+        for (int i = 0; i < n; i++)
+        {
+            if(i / 2 == 0)
+            {
+
+            }
+            else
+            {
+
+            }
         }
 
         m_currentTarget = 0;

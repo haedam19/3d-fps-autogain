@@ -28,23 +28,21 @@ public class TargetSpawner2D : MonoBehaviour
         if(currentTarget)
             Destroy(currentTarget);
 
-        Vector2 nextCenter;
-        while (true)
-        {
-            float x = Random.Range(xMin, xMax);
-            float y = Random.Range(yMin, yMax);
-            nextCenter = new Vector2(x, y);
+        float rad;
+        if (GameManager2D.Instance.trial % 2 == 0)
+            rad = (2 * Mathf.PI / GameManager2D.Instance.goal) * (GameManager2D.Instance.trial / 2f);
+        else
+            rad = (2 * Mathf.PI / GameManager2D.Instance.goal) * ((GameManager2D.Instance.trial - 1) / 2f) + Mathf.PI;
 
-            if((center - nextCenter).sqrMagnitude > 10000f)
-            {
-                center = nextCenter;
-                break;
-            }
-        }
+        float x = (512f / 2f) * Mathf.Cos(rad) + 960f;
+        float y = (512f / 2f) * Mathf.Sin(rad) + 540f;
+
+        Vector2 nextCenter = new Vector2(x, y);
+
         Vector2 nextCenterWorld = Camera.main.ScreenToWorldPoint(nextCenter);
 
         currentTarget = Instantiate(target, (Vector3)nextCenterWorld, Quaternion.identity);
 
-        return center;
+        return nextCenter;
     }
 }

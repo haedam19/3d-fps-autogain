@@ -172,7 +172,7 @@ MonoBehaviour:
   startTime: 0
   playing: 0
   inExporting: 0
-  goal: 10
+  goal: 23
   trial: 0
 --- !u!1 &403459478
 GameObject:

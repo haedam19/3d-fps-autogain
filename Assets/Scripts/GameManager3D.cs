@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Data;
 using UnityEngine;
 
 public class GameManager3D : MonoBehaviour
@@ -31,6 +32,7 @@ public class GameManager3D : MonoBehaviour
     public int totalTrialCount;
     public int errorCount;
 
+    public SessionData session;
     public void Awake()
     {
         if (instance == null)
@@ -65,6 +67,11 @@ public class GameManager3D : MonoBehaviour
     }
 
     public void Click()
+    {
+
+    }
+
+    public void Click(bool hitFlag)
     {
 
     }
