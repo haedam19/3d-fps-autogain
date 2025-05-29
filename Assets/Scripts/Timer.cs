@@ -5,7 +5,8 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 
 /// <summary>
-/// 고해상도 타이머입니다. GameManager에서 Reset 후 사용해야 합니다.
+/// <para> 고해상도 타이머입니다. </para>
+/// <para> Time 프로퍼티를 통해 최초 호출 또는 최근 Reset 후 경과된 시간을 얻을 수 있습니다.</para>
 /// </summary>
 public class Timer
 {
@@ -29,17 +30,22 @@ public class Timer
 
     private long _freq; // 초당 count 횟수
     private long _counter; // Time 측정하는 순간의 counter 값
-    private long _startCounter; // Timer 초기화되는 순간의 counter 값
+    private long _startCounter; // Timer 리셋 순간의 counter 값
 
     private Timer()
     {
+        // instance 생성시 자동 리셋 1회 시행
         QueryPerformanceFrequency(out _freq);
         QueryPerformanceCounter(out _startCounter);
     }
 
-    /// <summary>
-    /// 프로그램 실행 경과 시간을 ms 단위로 반환합니다.
-    /// </summary>
+    /// <summary> 타이머를 리셋합니다. </summary>
+    public static void Reset()
+    {
+        QueryPerformanceCounter(out Instance._startCounter);
+    }
+
+    /// <summary> 타이머가 리셋된 이후 경과된 시간을 ms 단위로 반환합니다. </summary>
     public static long Time
     {
         get
@@ -49,11 +55,5 @@ public class Timer
             Debug.Log(time);
             return time;
         }
-    }
-
-    public static void Reset()
-    {
-        QueryPerformanceFrequency(out Instance._freq);
-        QueryPerformanceCounter(out Instance._startCounter);
     }
 }

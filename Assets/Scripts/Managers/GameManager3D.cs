@@ -1,0 +1,248 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Xml;
+using MouseLog;
+using UnityEngine;
+
+public class GameManager3D : MonoBehaviour
+{
+    private const double MinDblClickDist = 4.0; // minimum distance two clicks must be apart (filters double-clicks)
+
+    #region Singleton Instance
+    static GameManager3D instance;
+    public static GameManager3D Instance
+    {
+        get
+        {
+            if (instance == null)
+                return null;
+            else
+                return instance;
+        }
+    }
+    #endregion
+
+    public enum GameState {
+        InterCondition, // 측정 중이 아닌 상태
+        StartTrial,     // Start Trial 입력 대기 중
+        Measuring       // Condition 내에서 측정 시행 중
+    }
+
+    [SerializeField] private GameState currentState; // 현재 게임 상태
+
+    private string gameLogfilePath; // 게임 실행 관련 로그 기록 경로
+
+    [Header("SubSystems")]
+    public TargetManager3D targetManager;
+    public UIManager3D uiManager;
+    public MouseTracker mouseTracker;
+
+    [Header("GameStatus")]
+    public bool playing;
+    public bool inExporting;
+    public float startTime;
+    public ushort trialIndex;
+
+    [Header("Statistics")]
+    public int totalTrialCount;
+
+    #region MouseLogData
+    private SessionData _sdata; // the whole session (one test); holds conditions in order
+    private ConditionData _cdata; // the current condition; retrieved from the session
+    private TrialData _tdata; // the current trial; retrieved from the condition
+
+    public SessionData Session { get { return _sdata; } }
+    public ConditionData Condition { get { return _cdata; } }
+    public TrialData TrialData { get { return _tdata; } }
+    #endregion
+
+    #region file
+    private string _fileNoExt; // full path and filename without extension
+    private XmlTextWriter _writer; // XML writer -- uses _fileNoExt.xml
+    #endregion
+
+    public void Awake()
+    {
+        if (instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        instance = this;
+        currentState = GameState.InterCondition;
+
+        uiManager.Init();
+        targetManager.Init();
+
+        // 로그 파일 경로 및 이름 설정 & xml 로그 준비
+#if UNITY_EDITOR
+        gameLogfilePath = Application.dataPath + "/Log";
+#elif UNITY_STANDALONE_WIN
+        gameLogfilePath = Application.persistentDataPath;
+#endif
+        //session_onfig.json 로드 -> _sdata, _cdata, _tdata 초기화
+        SessionConfiguration sessionconfig = LoadData(); 
+
+        // FilenameBase: s{subject id}_{1D / 2D}_{mnone / nomet}
+        _fileNoExt = string.Format("{0}\\{1}__{2}", gameLogfilePath, _sdata.FilenameBase, Environment.TickCount);
+        _writer = new XmlTextWriter(_fileNoExt + ".xml", Encoding.UTF8);
+        _writer.Formatting = Formatting.Indented;
+        _sdata.WriteXmlHeader(_writer);
+
+        // 타이머 초기화
+        Timer.Reset();
+
+        playing = false;
+        inExporting = false;
+        mouseTracker.Init();
+        mouseTracker.enabled = false;
+
+        trialIndex = 0;
+        totalTrialCount = 0;
+
+        uiManager.ShowSessionStartMsgBox(sessionconfig);
+    }
+
+    public void TestStart()
+    {
+        targetManager.SetActiveCondition(0); // 첫 번째 Condition의 타겟 세팅
+        _tdata.ThisTarget.TargetOn(); // 첫 번째 타겟 켜기
+        currentState = GameState.StartTrial; // 상태 변경
+    }
+
+    #region Mouse Event Handling
+
+    public void MouseClick()
+    {
+
+    }
+
+    public void MouseClick(Vector2 pos, long time, bool rayHitFlag, RaycastHit hitInfo)
+    {
+        if (_cdata == null || currentState == GameState.InterCondition)
+            return;
+
+        // TimePointR로 변환하면서 좌상단 원점 좌표계로 변환
+        TimePointR clickTimePos = new TimePointR((PointR)pos, time);
+
+        // 시작 Trial이면 바로 NextTrial 호출, 아닐 경우엔 더블클릭 방지 연산 수행 후 NextTrial 호출
+        if (_tdata.IsStartAreaTrial || PointR.Distance((PointR)_tdata.Start, (PointR)clickTimePos) > MinDblClickDist)
+            NextTrial(clickTimePos, rayHitFlag, hitInfo);
+    }
+
+    public void MouseMove(MouseMove move)
+    {
+        // only record moves when we are within a trial
+        if (_tdata != null && !_tdata.IsStartAreaTrial && currentState != GameState.InterCondition) 
+        {
+            _tdata.Movement.AddMove(new TimePointR(move.currentPos.x, move.currentPos.y, move.timeStamp));
+        }
+    }
+
+    void NextTrial(TimePointR click, bool rayHitFlag, RaycastHit hitInfo)
+    {
+        if (_tdata.IsStartAreaTrial) // 시작 trial인 경우
+        {
+            if (!_tdata.TargetContains((PointR)click)) // click missed start target
+            {
+                DoError();
+            }
+            else // start first actual trial
+            {
+                _tdata = _cdata[1]; // trial number 1
+                _tdata.LastTarget.TargetOff(); // 지난 타겟 꺼짐
+                _tdata.ThisTarget.TargetOn(); // 현재 타겟 켜짐
+                _tdata.Start = click; // 시작 좌표 및 시간 기록
+            }
+        }
+        else if (_tdata.Number < _cdata.NumTrials) // 동일 condition 내 다음 trial로 진행
+        {
+            _tdata.End = click;
+            _tdata.NormalizeTimes();
+            if (_tdata.IsError)
+                DoError();
+
+            _tdata = _cdata[_tdata.Number + 1];
+            _tdata.LastTarget.TargetOff(); // 지난 타겟 꺼짐
+            _tdata.ThisTarget.TargetOn(); // 현재 타겟 켜짐
+            _tdata.Start = click; // 시작 좌표 및 시간 기록
+        }
+        else // Condition 종료. 
+        {
+            currentState = GameState.InterCondition;
+            Cursor.lockState = CursorLockMode.None; // 커서 잠금 해제
+            UIManager3D.Instance.ShowConditionEndMsgBox();
+        }
+    }
+
+    public void NextCondition()
+    {
+        //다음 Condition으로 넘어가거나 Session 종료.
+        if(_cdata.Index + 1 == _sdata.NumTotalConditions) // 마지막 Condition인 경우
+        {
+            // Session 종료
+            _sdata.WriteXmlFooter(_writer);
+            UIManager3D.Instance.ShowSessionEndMsgBox();
+        }
+        else // 다음 Condition으로 넘어감
+        {
+            _cdata = _sdata[ _cdata.Index + 1];
+            _tdata = _cdata[0];
+        }
+    }
+
+    #endregion
+
+    private void DoError()
+    {
+        // TODO: IMPLEMENT
+    }
+
+    /// <summary> config.json을 읽어 session 세팅. 실패하면 프로그램 종료. </summary>
+    private SessionConfiguration LoadData()
+    {
+        SessionConfiguration sessionConfig = null;
+        string json = null;
+        json = File.ReadAllText(Path.Combine(Application.dataPath, "Json", "session_config.json"));
+        string fileName = string.Format("ConfigLoadLog_{0}_{1}.txt", DateTime.Now.ToString("yyyy-MM-dd"), Environment.TickCount);
+
+        if (json != null)
+        {
+            sessionConfig = JsonUtility.FromJson<SessionConfiguration>(json);
+            if (sessionConfig.isValid())
+            {
+                // config 이용해 SessionData, ConditionData, TrialData 초기화
+                _sdata = new SessionData(sessionConfig.subject, sessionConfig.isCircular, new ScreenData(Screen.width, Screen.height), sessionConfig.a, sessionConfig.w, null, -1.0, -1.0, sessionConfig.trials, sessionConfig.practice);
+                _cdata = _sdata[0]; // first overall condition
+                _tdata = _cdata[0]; // first trial is special start-area trial at index 0
+                totalTrialCount = sessionConfig.trials;
+                using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                    sw.WriteLine(json);
+
+            }
+            else
+            {
+                using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                    sw.WriteLine("Invalid config");
+                Application.Quit();
+            }
+        }
+        else
+        {
+            using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                sw.WriteLine("Failed to load session_config.json");
+            Application.Quit();
+        }
+
+        return sessionConfig;
+    }
+
+    private void OnApplicationQuit()
+    {
+        _writer.Close();
+    }
+}
