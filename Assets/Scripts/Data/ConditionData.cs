@@ -131,7 +131,7 @@ namespace MouseLog
             TrialData td;
             for(int i = 0; i < trials + 1; i++)
             {
-                td = new TrialData(i, i <= practice, i == 0 ? null : orderedTargets[i - 1], orderedTargets[i], center, mt);
+                td = new TrialData(i, i <= practice, this, i == 0 ? null : orderedTargets[i - 1], orderedTargets[i], center, mt);
                 _trials.Add(td);
             }
         }

@@ -56,11 +56,11 @@ public class TargetManager3D : MonoBehaviour
         for (int i = 0; i < targetCount; i++)
         {
             double rad = Math.PI / 2.0 - (2.0 * Math.PI / targetCount) * i;
-            double x = 0.1 * radius * Math.Cos(rad);
-            double y = 0.1 * radius * Math.Sin(rad);
+            double x = radius * Math.Cos(rad);
+            double y = radius * Math.Sin(rad);
 
             GameObject targetObj = Instantiate(targetPrefab, conditionRoot.transform);
-            targetObj.transform.localPosition = new Vector3((float)x, (float)y, 0f);
+            targetObj.transform.localPosition = new Vector3((float)(0.1 * x), (float)(0.1 * y), 0f);
             targetObj.transform.position = targetObj.transform.position.normalized * distanceToCamera;
 
             Target3D t = targetObj.GetComponent<Target3D>();

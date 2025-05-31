@@ -84,10 +84,11 @@ namespace MouseLog
         /// <param name="index">The 0-based index number of this trial.</param>
         /// <param name="practice">True if this trial is practice; false otherwise. Practice trials aren't included in any calculations.</param>
         /// <param name="tInterval">The metronome time interval in milliseconds, or -1L if unused.</param>
-        public TrialData(int index, bool practice, Target3D lastTarget, Target3D thisTarget, PointR center, long tInterval)
+        public TrialData(int index, bool practice, ConditionData owner, Target3D lastTarget, Target3D thisTarget, PointR center, long tInterval)
         {
             _number = index;
             _practice = practice;
+            _owner = owner; // the condition that owns this trial
             _tInterval = tInterval;
             _start = TimePointR.Empty;
             _end = TimePointR.Empty;

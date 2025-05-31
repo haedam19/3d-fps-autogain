@@ -44,7 +44,6 @@ public class GameManager3D : MonoBehaviour
     public bool playing;
     public bool inExporting;
     public float startTime;
-    public ushort trialIndex;
 
     [Header("Statistics")]
     public int totalTrialCount;
@@ -101,7 +100,6 @@ public class GameManager3D : MonoBehaviour
         mouseTracker.Init();
         mouseTracker.enabled = false;
 
-        trialIndex = 0;
         totalTrialCount = 0;
 
         uiManager.ShowSessionStartMsgBox(sessionconfig);
@@ -112,6 +110,7 @@ public class GameManager3D : MonoBehaviour
         targetManager.SetActiveCondition(0); // 첫 번째 Condition의 타겟 세팅
         _tdata.ThisTarget.TargetOn(); // 첫 번째 타겟 켜기
         currentState = GameState.StartTrial; // 상태 변경
+        mouseTracker.enabled = true; // 마우스 트래커 활성화
     }
 
     #region Mouse Event Handling
@@ -127,7 +126,10 @@ public class GameManager3D : MonoBehaviour
             return;
 
         // TimePointR로 변환하면서 좌상단 원점 좌표계로 변환
-        TimePointR clickTimePos = new TimePointR((PointR)pos, time);
+        TimePointR clickTimePos = new TimePointR((PointR)(pos + new Vector2(Screen.width / 2, Screen.height / 2)), time);
+
+        Debug.Log("Click: " + $"{clickTimePos.X}, {clickTimePos.Y}");
+        Debug.Log($"{_tdata.ThisTarget.CenterP.X}, {_tdata.ThisTarget.CenterP.Y}");
 
         // 시작 Trial이면 바로 NextTrial 호출, 아닐 경우엔 더블클릭 방지 연산 수행 후 NextTrial 호출
         if (_tdata.IsStartAreaTrial || PointR.Distance((PointR)_tdata.Start, (PointR)clickTimePos) > MinDblClickDist)
@@ -157,6 +159,7 @@ public class GameManager3D : MonoBehaviour
                 _tdata.LastTarget.TargetOff(); // 지난 타겟 꺼짐
                 _tdata.ThisTarget.TargetOn(); // 현재 타겟 켜짐
                 _tdata.Start = click; // 시작 좌표 및 시간 기록
+                currentState = GameState.Measuring; // 상태 변경
             }
         }
         else if (_tdata.Number < _cdata.NumTrials) // 동일 condition 내 다음 trial로 진행
@@ -173,16 +176,17 @@ public class GameManager3D : MonoBehaviour
         }
         else // Condition 종료. 
         {
+            _cdata.WriteXmlHeader(_writer); // write out the condition and its trials to XML
             currentState = GameState.InterCondition;
-            Cursor.lockState = CursorLockMode.None; // 커서 잠금 해제
-            UIManager3D.Instance.ShowConditionEndMsgBox();
+            mouseTracker.enabled = false; // 마우스 트래커 비활성화
+            UIManager3D.Instance.ShowConditionEndMsgBox(_cdata.Index + 1, _sdata.NumTotalConditions);
         }
     }
 
     public void NextCondition()
     {
         //다음 Condition으로 넘어가거나 Session 종료.
-        if(_cdata.Index + 1 == _sdata.NumTotalConditions) // 마지막 Condition인 경우
+        if (_cdata.Index + 1 == _sdata.NumTotalConditions) // 마지막 Condition인 경우
         {
             // Session 종료
             _sdata.WriteXmlFooter(_writer);
@@ -190,8 +194,12 @@ public class GameManager3D : MonoBehaviour
         }
         else // 다음 Condition으로 넘어감
         {
+            currentState = GameState.StartTrial;
+            mouseTracker.enabled = true;
             _cdata = _sdata[ _cdata.Index + 1];
             _tdata = _cdata[0];
+            targetManager.SetActiveCondition(_cdata.Index); // 타겟 매니저에 현재 Condition 설정
+            _tdata.ThisTarget.TargetOn(); // 첫 번째 타겟 켜기
         }
     }
 

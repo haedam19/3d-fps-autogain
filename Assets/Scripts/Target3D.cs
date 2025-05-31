@@ -73,6 +73,7 @@ public class Target3D : MonoBehaviour
 
     public void TargetOn()
     {
+        Debug.Log("Target On");
         m_renderer.material = m_onMaterial;
         m_collider.enabled = true;
     }

@@ -52,7 +52,6 @@ public class Timer
         {
             QueryPerformanceCounter(out Instance._counter);
             long time = (long)((double)(Instance._counter - Instance._startCounter) / ((double)Instance._freq / 1000));
-            Debug.Log(time);
             return time;
         }
     }

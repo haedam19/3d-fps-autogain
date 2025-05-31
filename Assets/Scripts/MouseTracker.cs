@@ -49,12 +49,13 @@ public class MouseTracker : MonoBehaviour
 
     private void OnEnable()
     {
+        transform.rotation = Quaternion.identity; // 카메라 회전 초기화
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         _delta = Vector2.zero;
-        _lastPos = new Vector2(Screen.width / 2, Screen.height / 2);
-        _currentPos = new Vector2(Screen.width / 2, Screen.height / 2);
+        _lastPos = Vector2.zero;
+        _currentPos = Vector2.zero;
         _isClicked = false;
     }
 
