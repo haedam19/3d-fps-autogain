@@ -542,12 +542,6 @@ namespace MouseLog
             writer.WriteAttributeString("movementVariability", XmlConvert.ToString(Math.Round(analyses.MovementVariability, 4)));
             writer.WriteAttributeString("movementError", XmlConvert.ToString(Math.Round(analyses.MovementError, 4)));
             writer.WriteAttributeString("movementOffset", XmlConvert.ToString(Math.Round(analyses.MovementOffset, 4)));
-            writer.WriteAttributeString("taskAxisCrossings", XmlConvert.ToString(0));
-            writer.WriteAttributeString("movementDirectionChanges", XmlConvert.ToString(0));
-            writer.WriteAttributeString("orthogonalDirectionChanges", XmlConvert.ToString(0));
-            writer.WriteAttributeString("movementVariability", XmlConvert.ToString(0));
-            writer.WriteAttributeString("movementError", XmlConvert.ToString(0));
-            writer.WriteAttributeString("movementOffset", XmlConvert.ToString(0));
 
             // write out all the mouse move points that make up this trial
             int i = 0;
