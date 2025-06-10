@@ -138,10 +138,14 @@ public class GameManager3D : MonoBehaviour
 
     public void MouseMove(MouseMove move)
     {
+        Vector2 unityCoordCurrentMove = move.currentPos;
+        Vector2 unityScreenCoordCurrentMove = unityCoordCurrentMove + new Vector2(Screen.width / 2, Screen.height / 2);
+        PointR curPos = (PointR)unityScreenCoordCurrentMove;
+
         // only record moves when we are within a trial
         if (_tdata != null && !_tdata.IsStartAreaTrial && currentState != GameState.InterCondition) 
         {
-            _tdata.Movement.AddMove(new TimePointR(move.currentPos.x, move.currentPos.y, move.timeStamp));
+            _tdata.Movement.AddMove(new TimePointR(curPos, move.timeStamp));
         }
     }
 
@@ -176,6 +180,11 @@ public class GameManager3D : MonoBehaviour
         }
         else // Condition 종료. 
         {
+            _tdata.End = click;
+            _tdata.NormalizeTimes();
+            if (_tdata.IsError)
+                DoError();
+
             _cdata.WriteXmlHeader(_writer); // write out the condition and its trials to XML
             currentState = GameState.InterCondition;
             mouseTracker.enabled = false; // 마우스 트래커 비활성화
@@ -224,7 +233,7 @@ public class GameManager3D : MonoBehaviour
             if (sessionConfig.isValid())
             {
                 // config 이용해 SessionData, ConditionData, TrialData 초기화
-                _sdata = new SessionData(sessionConfig.subject, sessionConfig.isCircular, new ScreenData(Screen.width, Screen.height), sessionConfig.a, sessionConfig.w, null, -1.0, -1.0, sessionConfig.trials, sessionConfig.practice);
+                _sdata = new SessionData(sessionConfig.subject, sessionConfig.isCircular, new ScreenData(Screen.width, Screen.height), sessionConfig.a, sessionConfig.w, null, 100.0, 200.0, sessionConfig.trials, sessionConfig.practice);
                 _cdata = _sdata[0]; // first overall condition
                 _tdata = _cdata[0]; // first trial is special start-area trial at index 0
                 totalTrialCount = sessionConfig.trials;

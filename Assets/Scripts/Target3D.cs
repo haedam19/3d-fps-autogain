@@ -40,7 +40,7 @@ public class Target3D : MonoBehaviour
         set
         {
             radius = value;
-            transform.localScale = new Vector3(0.1f * value, 0.1f * value, 0.1f * value);
+            transform.localScale = new Vector3(0.2f * value, 0.2f * value, 0.2f * value);
         }
     }
 
@@ -91,4 +91,9 @@ public class Target3D : MonoBehaviour
 
     public void BindCondition(ConditionData cdata) { _cdata = cdata; }
     public void BindTrial(TrialData tdata) { _tdata = tdata; }
+
+    public string DataToString()
+    {
+        return $"{{X={posDisplay.X}, Y={posDisplay.Y}, Radius={Radius}}}";
+    }
 }

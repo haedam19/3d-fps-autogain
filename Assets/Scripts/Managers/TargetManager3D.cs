@@ -64,7 +64,7 @@ public class TargetManager3D : MonoBehaviour
             targetObj.transform.position = targetObj.transform.position.normalized * distanceToCamera;
 
             Target3D t = targetObj.GetComponent<Target3D>();
-            t.Radius = condition.W;
+            t.Radius = condition.W / 2f;
             t.CenterV = new Vector2((float)(x + Screen.width / 2.0), (float)(y + Screen.height / 2.0));
 
             targets.Add(t);

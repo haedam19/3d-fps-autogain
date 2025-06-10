@@ -510,8 +510,8 @@ namespace MouseLog
             writer.WriteAttributeString("completed", XmlConvert.ToString(this.IsComplete));
             writer.WriteAttributeString("practice", XmlConvert.ToString(_practice));
 
-            writer.WriteAttributeString("lastCircle", _lastTarget.ToString());
-            writer.WriteAttributeString("thisCircle", _thisTarget.ToString());
+            writer.WriteAttributeString("lastCircle", _lastTarget.DataToString());
+            writer.WriteAttributeString("thisCircle", _thisTarget.DataToString());
             writer.WriteAttributeString("isoCenter", _isoCenter.ToString());
 
             writer.WriteAttributeString("MT", XmlConvert.ToString(_tInterval));

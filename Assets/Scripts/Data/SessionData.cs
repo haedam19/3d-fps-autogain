@@ -56,6 +56,11 @@ namespace MouseLog
             W = w;
             H = h;
         }
+
+        public override string ToString()
+        {
+            return $"{{X=0, Y=0, Width={W}, Height={H}}}";
+        }
     }
 
     public class SessionData: IXmlLoggable
