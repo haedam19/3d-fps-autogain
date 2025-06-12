@@ -1,0 +1,9 @@
+{
+    "subject": 1,
+    "isCircular": true,
+    "a": [512],
+    "w": [32, 64],
+    "trials": 23,
+    "practice": 3
+}
+
