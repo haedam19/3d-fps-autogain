@@ -31,10 +31,10 @@ public class ScreenProjectionTester : MonoBehaviour
         // 3) 화면 네 모서리에 해당하는 좌표 검증
         Vector3[] screenCorners = new Vector3[]
         {
-            new Vector3(0,             0,              d),  // Bottom-Left
-            new Vector3(0,             Screen.height,  d),  // Top-Left
-            new Vector3(Screen.width,  0,              d),  // Bottom-Right
-            new Vector3(Screen.width,  Screen.height,  d)   // Top-Right
+            new Vector3(0,             0,              d/10),  // Bottom-Left
+            new Vector3(0,             Screen.height,  d/10),  // Top-Left
+            new Vector3(Screen.width,  0,              d / 10),  // Bottom-Right
+            new Vector3(Screen.width,  Screen.height,  d / 10)   // Top-Right
         };
         string[] cornerNames = new string[] { "BL", "TL", "BR", "TR" };
 
