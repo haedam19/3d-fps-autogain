@@ -196,7 +196,72 @@ public class UIManager3D : MonoBehaviour
 
     public void ShowSessionEndMsgBox()
     {
-        Debug.Log("세션 종료");
+        // 중복 방지: 기존 메시지 박스 제거 또는 숨기기
+        if (conditionEndMsgBox != null)
+            conditionEndMsgBox.SetActive(false);
+
+        // Canvas 찾기 또는 생성
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null)
+        {
+            GameObject canvasObj = new GameObject("Canvas");
+            canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<CanvasScaler>();
+            canvasObj.AddComponent<GraphicRaycaster>();
+        }
+
+        // 메시지 박스 패널 생성
+        GameObject sessionEndMsgBox = new GameObject("SessionEndMsgBox");
+        sessionEndMsgBox.transform.SetParent(canvas.transform, false);
+        RectTransform panelRect = sessionEndMsgBox.AddComponent<RectTransform>();
+        panelRect.sizeDelta = new Vector2(800, 600);
+        Image panelImage = sessionEndMsgBox.AddComponent<Image>();
+        panelImage.color = new Color(0, 0, 0, 0.95f);
+
+        // 텍스트 생성
+        GameObject textObj = new GameObject("MsgText");
+        textObj.transform.SetParent(sessionEndMsgBox.transform, false);
+        Text msgTextComp = textObj.AddComponent<Text>();
+        msgTextComp.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        msgTextComp.alignment = TextAnchor.MiddleCenter;
+        msgTextComp.color = Color.white;
+        msgTextComp.fontSize = 32;
+        msgTextComp.rectTransform.anchoredPosition = new Vector2(0, 90);
+        msgTextComp.rectTransform.sizeDelta = new Vector2(760, 360);
+        msgTextComp.text = "Thank you for participating in the experiment.\nThe program will now exit.";
+
+        // 종료 버튼 생성
+        GameObject buttonObj = new GameObject("CloseButton");
+        buttonObj.transform.SetParent(sessionEndMsgBox.transform, false);
+        Button closeButton = buttonObj.AddComponent<Button>();
+        Image btnImage = buttonObj.AddComponent<Image>();
+        btnImage.color = new Color(0.2f, 0.5f, 1f, 1f);
+        RectTransform btnRect = buttonObj.GetComponent<RectTransform>();
+        btnRect.sizeDelta = new Vector2(320, 80);
+        btnRect.anchoredPosition = new Vector2(0, -200);
+
+        // 버튼 텍스트
+        GameObject btnTextObj = new GameObject("ButtonText");
+        btnTextObj.transform.SetParent(buttonObj.transform, false);
+        Text btnText = btnTextObj.AddComponent<Text>();
+        btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        btnText.text = "Exit";
+        btnText.alignment = TextAnchor.MiddleCenter;
+        btnText.color = Color.white;
+        btnText.fontSize = 20;
+        btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
+
+        // 버튼 클릭 이벤트 등록
+        closeButton.onClick.AddListener(() =>
+        {
+            sessionEndMsgBox.SetActive(false);
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        });
     }
 }
 

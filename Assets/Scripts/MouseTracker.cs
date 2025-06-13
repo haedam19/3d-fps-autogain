@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public struct MouseMove
@@ -21,7 +22,11 @@ public struct MouseMove
 public class MouseTracker : MonoBehaviour
 {
     // GameManager3D가 없는 상태에서 단위테스트시 true로 설정
-    [SerializeField] bool unitTest = false; 
+    [SerializeField] bool unitTest = false;
+
+    bool sensitivitySetting = true;
+    [SerializeField] GameObject sensitivityView;
+    [SerializeField] TMP_Text sensitivityText;
 
     private Mouse Mouse { get { return Mouse.current; } }
     public ControlDisplayGain gain;
@@ -33,6 +38,11 @@ public class MouseTracker : MonoBehaviour
     private Vector2 _lastPos; // 이전 프레임 마우스 커서 위치
     private Vector2 _currentPos; // 잠정적인 마우스 커서 위치
     private bool _isClicked;
+
+
+    private float yaw = 0f;
+    private float pitch = 0f;
+    public float sensitivity = 0.1f;
 
     public void Awake()
     {
@@ -67,34 +77,54 @@ public class MouseTracker : MonoBehaviour
 
     private void Update()
     {
-        // Get mouse input data
-        _delta = Mouse.delta.ReadValue(); // WM_INPUT 메시지 이용, count 단위로 측정
-        _gDelta = gain.GainedDelta(_delta); // CD Gain 적용한 delta, subpixel까지 계산됨(소수점 아래 단위 측정)
-        _lastPos = _currentPos;
-        _currentPos += _gDelta;
-        _isClicked = Mouse.press.wasPressedThisFrame;
-
-        // 카메라가 잠정적 커서 위치를 바라보도록 회전
-        transform.LookAt(new Vector3(_currentPos.x, _currentPos.y, _d));
-
-        if (unitTest) return;
-
-        // 마우스 움직임 이벤트 발생
-        if (_delta.sqrMagnitude > 0)
+        if(sensitivitySetting)
         {
-            GameManager3D.Instance.MouseMove(new MouseMove(_gDelta, _lastPos, _currentPos, Timer.Time));
-            // int currentCond = GameManager3D.Instance.Session.condIdx;
-            // GameManager3D.Instance.Session._conditions[currentCond].AddMove(_currentPos);
+            if(Input.GetKey(KeyCode.Space))
+            {
+                sensitivitySetting = false;
+                Destroy(sensitivityView);
+            }
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.A))
+                    sensitivity -= 0.01f;
+                if (Input.GetKeyDown(KeyCode.D))
+                    sensitivity += 0.01f;
+                sensitivity = Mathf.Clamp(sensitivity, 0.01f, 0.5f);
+                sensitivityText.text = sensitivity.ToString("F2");
+            }
+            
         }
 
-        // 클릭 이벤트 발생
+
+        _delta = Mouse.delta.ReadValue();
+
+        // 1. 카메라 회전
+        yaw += _delta.x * sensitivity;
+        pitch -= _delta.y * sensitivity;
+        pitch = Mathf.Clamp(pitch, -60f, 60f);
+        transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
+
+        // 2. 평면 교차 계산
+        Vector3 origin = transform.position;
+        Vector3 dir = transform.forward;
+        float t = (_d - origin.z) / dir.z;
+        Vector3 intersection = origin + dir * t;
+
+        _lastPos = _currentPos;
+        _currentPos = new Vector2(intersection.x, intersection.y);
+
+        _isClicked = Mouse.press.wasPressedThisFrame;
+
+        if (unitTest || sensitivitySetting ) return;
+
+        if (_delta.sqrMagnitude > 0)
+            GameManager3D.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, Timer.Time));
+
         if (_isClicked)
         {
             RaycastHit hitInfo;
-            bool hit = Physics.Raycast(transform.position
-                , transform.forward
-                , out hitInfo
-                , 1e3f, LayerMask.NameToLayer("Target"));
+            bool hit = Physics.Raycast(transform.position, transform.forward, out hitInfo, 1e3f, LayerMask.NameToLayer("Target"));
             GameManager3D.Instance.MouseClick(_currentPos, Timer.Time, hit, hitInfo);
         }
     }

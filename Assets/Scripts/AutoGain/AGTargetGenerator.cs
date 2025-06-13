@@ -44,8 +44,6 @@ public class AGTargetGenerator : MonoBehaviour
         worldBottomLeft = cam.ScreenToWorldPoint(screenBottomLeft);
         worldTopRight = cam.ScreenToWorldPoint(screenTopright);
 
-        // 첫 타겟 생성
-        GenerateNextTarget();
     }
 
     public void GenerateNextTarget()
@@ -82,6 +80,7 @@ public class AGTargetGenerator : MonoBehaviour
 
     void Update()
     {
+        // 유니티 에디터에서 타겟 위치 확인용
         if(targetObj != null)
         {
             targetPos = targetObj.transform.position;

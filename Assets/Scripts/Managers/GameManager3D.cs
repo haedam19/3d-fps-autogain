@@ -128,8 +128,8 @@ public class GameManager3D : MonoBehaviour
         // TimePointR로 변환하면서 좌상단 원점 좌표계로 변환
         TimePointR clickTimePos = new TimePointR((PointR)(pos + new Vector2(Screen.width / 2, Screen.height / 2)), time);
 
-        Debug.Log("Click: " + $"{clickTimePos.X}, {clickTimePos.Y}");
-        Debug.Log($"{_tdata.ThisTarget.CenterP.X}, {_tdata.ThisTarget.CenterP.Y}");
+        // Debug.Log("Click: " + $"{clickTimePos.X}, {clickTimePos.Y}");
+        // Debug.Log($"{_tdata.ThisTarget.CenterP.X}, {_tdata.ThisTarget.CenterP.Y}");
 
         // 시작 Trial이면 바로 NextTrial 호출, 아닐 경우엔 더블클릭 방지 연산 수행 후 NextTrial 호출
         if (_tdata.IsStartAreaTrial || PointR.Distance((PointR)_tdata.Start, (PointR)clickTimePos) > MinDblClickDist)

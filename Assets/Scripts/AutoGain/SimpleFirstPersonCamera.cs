@@ -40,5 +40,10 @@ public class SimpleFirstPersonCamera : MonoBehaviour
 
         // 카메라 회전 적용
         transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0f);
+
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+        }
     }
 }
