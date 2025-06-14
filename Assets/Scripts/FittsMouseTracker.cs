@@ -19,7 +19,7 @@ public struct MouseMove
 
 }
 
-public class MouseTracker : MonoBehaviour
+public class FittsMouseTracker : MonoBehaviour
 {
     // GameManager3D가 없는 상태에서 단위테스트시 true로 설정
     [SerializeField] bool unitTest = false;

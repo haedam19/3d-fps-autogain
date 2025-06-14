@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using MouseLog;
@@ -38,7 +39,7 @@ public class GameManager3D : MonoBehaviour
     [Header("SubSystems")]
     public TargetManager3D targetManager;
     public UIManager3D uiManager;
-    public MouseTracker mouseTracker;
+    public FittsMouseTracker mouseTracker;
 
     [Header("GameStatus")]
     public bool playing;
@@ -59,8 +60,10 @@ public class GameManager3D : MonoBehaviour
     #endregion
 
     #region file
+    public bool expComplete; // 측정이 끝까지 진행되었는지 체크
     private string _fileNoExt; // full path and filename without extension
     private XmlTextWriter _writer; // XML writer -- uses _fileNoExt.xml
+
     #endregion
 
     public void Awake()
@@ -84,13 +87,19 @@ public class GameManager3D : MonoBehaviour
         gameLogfilePath = Application.persistentDataPath;
 #endif
         //session_onfig.json 로드 -> _sdata, _cdata, _tdata 초기화
-        SessionConfiguration sessionconfig = LoadData(); 
+        SessionConfiguration sessionconfig = LoadData();
+
+        // 남아있는 .tmp 파일 있으면 정리. (이전 실행 중에 비정상 종료되어 남아있는 파일)
+        string leftoverTmp = Directory.GetFiles(gameLogfilePath, "*.tmp").FirstOrDefault();
+        if (leftoverTmp != null)
+            File.Delete(leftoverTmp);
 
         // FilenameBase: s{subject id}_{1D / 2D}_{mnone / nomet}
         _fileNoExt = string.Format("{0}\\{1}__{2}", gameLogfilePath, _sdata.FilenameBase, Environment.TickCount);
-        _writer = new XmlTextWriter(_fileNoExt + ".xml", Encoding.UTF8);
+        _writer = new XmlTextWriter(_fileNoExt + ".tmp", Encoding.UTF8); // 처음엔 .tmp로 저장. 측정이 정상적으로 종료되었을 때만 .xml로 변경
         _writer.Formatting = Formatting.Indented;
         _sdata.WriteXmlHeader(_writer);
+        expComplete = false;
 
         // 타이머 초기화
         Timer.Reset();
@@ -199,6 +208,7 @@ public class GameManager3D : MonoBehaviour
         {
             // Session 종료
             _sdata.WriteXmlFooter(_writer);
+            expComplete = true; // 측정 완료
             UIManager3D.Instance.ShowSessionEndMsgBox();
         }
         else // 다음 Condition으로 넘어감
@@ -258,8 +268,34 @@ public class GameManager3D : MonoBehaviour
         return sessionConfig;
     }
 
-    private void OnApplicationQuit()
+    void OnApplicationQuit()
     {
-        _writer.Close();
+        // 측정이 제대로 완료 되었다면 앱 종료시 .tmp로 저장된 기록을 xml로 옮기고 .tmp는 정리
+        if (expComplete)
+            FinalizeXmlWriter();
     }
+
+    private void FinalizeXmlWriter()
+    {
+        if (_writer != null)
+        {
+            try
+            {
+                string tmpPath = _fileNoExt + ".tmp";
+                string finalPath = _fileNoExt + ".xml";
+
+                if (File.Exists(tmpPath))
+                    File.Move(tmpPath, finalPath); // rename only if fully completed
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("XML 정리 중 오류: " + ex.Message);
+            }
+            finally
+            {
+                _writer = null;
+            }
+        }
+    }
+
 }
