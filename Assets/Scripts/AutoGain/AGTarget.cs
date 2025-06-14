@@ -10,6 +10,18 @@ public struct AGTargetData
     public float radius;
     public float w;
     
+    public static AGTargetData Empty = new AGTargetData {
+                                                posWorld = Vector3.zero,
+                                                posScreen = Vector2.zero,
+                                                posR = PointR.Empty,
+                                                radius = 0f,
+                                                w = 0f
+                                            };
+
+    public bool Contains(PointR p)
+    {
+        return PointR.Distance(posR, p) <= radius;
+    }
 }
 
 public class AGTarget : MonoBehaviour

@@ -8,6 +8,7 @@ public class AGTargetGenerator : MonoBehaviour
 
     [Tooltip("테스트할 카메라 (비어 있으면 MainCamera 사용)")]
     public Camera cam;
+    public SimpleFirstPersonCamera cameraController;
 
     [Header("실험 파라미터")]
     public float minApx; // 픽셀 단위 Ampiltude(거리) 최솟값
@@ -46,7 +47,7 @@ public class AGTargetGenerator : MonoBehaviour
 
     }
 
-    public void GenerateNextTarget()
+    public AGTargetData GenerateNextTarget()
     {
         if (targetObj != null)
             Destroy(targetObj);
@@ -60,6 +61,7 @@ public class AGTargetGenerator : MonoBehaviour
         wc = Random.Range(minWpx, maxWpx);
 
         bool isValid;
+        int safety = 0;
         do
         {
             xc = Random.Range(worldBottomLeft.x, worldTopRight.x);
@@ -69,6 +71,13 @@ public class AGTargetGenerator : MonoBehaviour
 
             float dist = Vector2.Distance(screenPos, center);
             isValid = dist >= minApx && dist <= maxApx;
+
+            if(++safety > 1000)
+            {
+                Debug.LogWarning("타겟 생성 실패: 너무 많은 시도");
+                cameraController.ResetCameraRotation();
+                return AGTargetData.Empty; // 너무 많은 시도 후 실패
+            }
         } while (!isValid);
 
         worldPos = worldPos.normalized * depthD;
@@ -76,6 +85,13 @@ public class AGTargetGenerator : MonoBehaviour
 
         float worldDiameter = wc / pixelsPerUnit;
         targetObj.transform.localScale = Vector3.one * worldDiameter;
+
+        
+        AGTarget agTarget = targetObj.GetComponent<AGTarget>();
+        agTarget.RecordTargetData(wc);
+        AGTargetData targetData = agTarget.data;
+
+        return targetData;
     }
 
     void Update()
@@ -84,12 +100,6 @@ public class AGTargetGenerator : MonoBehaviour
         if(targetObj != null)
         {
             targetPos = targetObj.transform.position;
-        }
-
-        // 마우스 클릭 시 다음 타겟 생성 (실험용)
-        if (Input.GetMouseButtonDown(0))
-        {
-            GenerateNextTarget();
         }
     }
 }

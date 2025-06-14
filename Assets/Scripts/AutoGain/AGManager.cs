@@ -5,24 +5,28 @@ using UnityEngine;
 public class AGManager : MonoBehaviour
 {
     #region Singleton
-    AGManager instance = null;
+    static AGManager instance = null;
 
-    public AGManager Instance
+    public static AGManager Instance
     {
         get
         {
-            if (instance == null)
+            if (instance != null)
             {
-                instance = this;
+                return instance;
             }
-            return instance;
+            else
+                return null;
         }
     }
     #endregion
 
     public enum GameState { Entrance, Standby, InBlock, InterBlock, Exit }
+    public GameState currentState = GameState.Entrance; // 현재 게임 상태
 
-    AGTargetGenerator targetGenerator;
+    [SerializeField] AGTargetGenerator targetGenerator;
+    [SerializeField] AGUIManager uiManager;
+    [SerializeField] SimpleFirstPersonCamera camController;
 
     AGTrialData lastTrial;
     AGTrialData curTrial;
@@ -49,12 +53,40 @@ public class AGManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        uiManager.ShowIndependentVariableSelectionUI();
     }
+
+    public void StartAutoGainMode()
+    {
+        currentState = GameState.Standby;
+        targetGenerator.GenerateNextTarget();
+        camController.enabled = true; // 카메라 컨트롤러 활성화
+    }
+
+    public void StartReferenceMode()
+    {
+        currentState = GameState.Standby;
+        targetGenerator.GenerateNextTarget();
+        camController.enabled = true; // 카메라 컨트롤러 활성화
+    }
+
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (currentState == GameState.Entrance)
+            return;
+
+        // 마우스 클릭 시 다음 타겟 생성 (실험용)
+        if (Input.GetMouseButtonDown(0))
+        {
+            targetGenerator.GenerateNextTarget();
+            if ( currentState == GameState.InBlock)
+            {
+                uiManager.ShowSubmovementHUD(true);
+            }
+            currentState = GameState.InBlock;
+
+        }
     }
 }

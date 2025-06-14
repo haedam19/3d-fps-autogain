@@ -46,4 +46,11 @@ public class SimpleFirstPersonCamera : MonoBehaviour
             transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
         }
     }
+
+    public void ResetCameraRotation()
+    {
+        xRotation = 0f;
+        yRotation = 0f;
+        transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+    }
 }
