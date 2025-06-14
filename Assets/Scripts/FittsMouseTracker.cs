@@ -42,7 +42,10 @@ public class FittsMouseTracker : MonoBehaviour
 
     private float yaw = 0f;
     private float pitch = 0f;
-    public float sensitivity = 0.1f;
+    public float sensitivity = 10f;
+
+    private long _curTime;
+    private long _lastTime;
 
     public void Awake()
     {
@@ -67,6 +70,9 @@ public class FittsMouseTracker : MonoBehaviour
         _lastPos = Vector2.zero;
         _currentPos = Vector2.zero;
         _isClicked = false;
+
+        _curTime = Timer.Time;
+        _lastTime = Timer.Time;
     }
 
     private void OnDisable()
@@ -87,11 +93,11 @@ public class FittsMouseTracker : MonoBehaviour
             else
             {
                 if (Input.GetKeyDown(KeyCode.A))
-                    sensitivity -= 0.01f;
+                    sensitivity -= 0.5f;
                 if (Input.GetKeyDown(KeyCode.D))
-                    sensitivity += 0.01f;
-                sensitivity = Mathf.Clamp(sensitivity, 0.01f, 0.5f);
-                sensitivityText.text = sensitivity.ToString("F2");
+                    sensitivity += 0.5f;
+                sensitivity = Mathf.Clamp(sensitivity, 0.5f, 25f);
+                sensitivityText.text = sensitivity.ToString("F1");
             }
             
         }
@@ -99,9 +105,13 @@ public class FittsMouseTracker : MonoBehaviour
 
         _delta = Mouse.delta.ReadValue();
 
+        _lastTime = _curTime;
+        _curTime = Timer.Time;
+        long deltaTime = _curTime - _lastTime;
+
         // 1. 카메라 회전
-        yaw += _delta.x * sensitivity;
-        pitch -= _delta.y * sensitivity;
+        yaw += _delta.x * sensitivity * (float)deltaTime / 1000f;
+        pitch -= _delta.y * sensitivity * (float)deltaTime / 1000f;
         pitch = Mathf.Clamp(pitch, -60f, 60f);
         transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
 
@@ -119,13 +129,13 @@ public class FittsMouseTracker : MonoBehaviour
         if (unitTest || sensitivitySetting ) return;
 
         if (_delta.sqrMagnitude > 0)
-            GameManager3D.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, Timer.Time));
+            GameManager3D.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, _curTime));
 
         if (_isClicked)
         {
             RaycastHit hitInfo;
             bool hit = Physics.Raycast(transform.position, transform.forward, out hitInfo, 1e3f, LayerMask.NameToLayer("Target"));
-            GameManager3D.Instance.MouseClick(_currentPos, Timer.Time, hit, hitInfo);
+            GameManager3D.Instance.MouseClick(_currentPos, _curTime, hit, hitInfo);
         }
     }
 }
