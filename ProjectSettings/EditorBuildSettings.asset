@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/3D.unity
     guid: fb1890fad1e856b48b1acdd4957b1983
   - enabled: 1
+    path: Assets/Scenes/Lobby.unity
+    guid: dfcb9b5c4917aac47b5de1d794124d9d
+  - enabled: 1
     path: Assets/Scenes/3D Fitts Test.unity
     guid: b07d77da5e71438449748f8f51390792
   - enabled: 0
