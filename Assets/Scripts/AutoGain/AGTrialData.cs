@@ -60,11 +60,13 @@ public class AGTrialData
     protected TimePointR _end; // the click point that ended this trial
 
     protected AGMovementData _movement; // the movement associated with this trial
-    private Target3D _thisTarget;
-    private Target3D _lastTarget;
+    private AGTargetData _thisTargetData;
+    private AGTargetData _lastTargetData;
     private PointR _isoCenter;
 
-    private ConditionData _owner;
+    public double A;
+    public double W;
+
     #endregion
 
     #region Constructor
@@ -83,39 +85,19 @@ public class AGTrialData
     /// <param name="index">The 0-based index number of this trial.</param>
     /// <param name="practice">True if this trial is practice; false otherwise. Practice trials aren't included in any calculations.</param>
     /// <param name="tInterval">The metronome time interval in milliseconds, or -1L if unused.</param>
-    public AGTrialData(int index, bool practice, ConditionData owner, Target3D lastTarget, Target3D thisTarget, PointR center, long tInterval)
+    public AGTrialData(int index, bool practice, AGTargetData lastTarget, AGTargetData thisTarget, PointR center, long tInterval)
     {
         _number = index;
         _practice = practice;
-        _owner = owner; // the condition that owns this trial
         _tInterval = tInterval;
         _start = TimePointR.Empty;
         _end = TimePointR.Empty;
         _movement = new AGMovementData(this);
-        _lastTarget = lastTarget;
-        _thisTarget = thisTarget;
+        _lastTargetData = lastTarget;
+        _thisTargetData = thisTarget;
         _isoCenter = center;
     }
 
-    /// <summary>
-    /// This static method is to be used by the ConditionData instance when creating the
-    /// special start-area trial after reading trial number 1 in a XML log file. The special
-    /// start-area trial is not logged explicitly, but it can be created from the information
-    /// in trial number 1.
-    /// </summary>
-    /// <param name="trialOne">The first trial in the condition whose last target is used to
-    /// create the special start-area trial.</param>
-    /// <returns>The special start-area trial for a 2D task.</returns>
-    internal static AGTrialData CreateStartTarget(AGTrialData trialOne)
-    {
-        AGTrialData st = new AGTrialData();
-        st._number = 0;
-        st._practice = true;
-        st._thisTarget = trialOne._lastTarget;
-        st._isoCenter = trialOne._isoCenter;
-        st._tInterval = trialOne._tInterval;
-        return st;
-    }
     #endregion
 
     #region Movement
@@ -126,49 +108,20 @@ public class AGTrialData
     }
     #endregion
 
-    #region Condition Values: Number, IsStartAreaTrial, IsPractice, UsedMetronome, ID(unused), MT, Axis, Circular, A, W
+    #region Condition Values: Number, IsStartAreaTrial, ID, Axis
 
     public int Number { get { return _number; } }
 
     public bool IsStartAreaTrial { get { return _number == 0; } }
 
-    /// <summary> Practice Trial은 condition-level calculations에서 제외됩니다. </summary>
-    public bool IsPractice { get { return _practice; } }
-
-    /// <summary> Gets whether or not this trial used a metronome to govern movement time. </summary>
-    public bool UsedMetronome { get { return _tInterval != -1L; } }
-
     public double ID { get { return Math.Log((double)A / W + 1.0, 2.0); } }
 
-    /// <summary>
-    /// Gets the normative movement time in milliseconds for this trial. The normative 
-    /// movement time is the time of a desired movement "encouraged" by the metronome 
-    /// interval tick time. If a normative time isn't used, this value is -1L.
-    /// </summary>
-    public long MT { get { return _tInterval; } }
-
     /// <summary> Gets the angle of the nominal movement axis for this trial, in radians. </summary>
-    public double Axis { get { return PointR.Angle(_lastTarget.CenterP, _thisTarget.CenterP, true); } }
+    public double Axis { get { return PointR.Angle(_lastTargetData.posR, _thisTargetData.posR, true); } }
 
-    public bool Circular { get { return true; } } // 1D 조건 취급 안 하니 무조건 true;
-
-    public int A { get { return _owner.A; } }
-
-    public int W { get { return _owner.W; } }
     #endregion
 
     #region Measured Values
-
-    /// <summary>
-    /// Clears the performance data associated with this trial. Does not clear the
-    /// independent variables that define the settings for this trial.
-    /// </summary>
-    public virtual void ClearData()
-    {
-        _start = TimePointR.Empty;
-        _end = TimePointR.Empty;
-        _movement.ClearMoves();
-    }
 
     /// <summary>
     /// Gets whether or not this trial has been completed. A completed trial has been
@@ -282,30 +235,6 @@ public class AGTrialData
     }
 
     /// <summary>
-    /// Gets a ratio indicating how the actual movement time (MTe) corresponded to the normative
-    /// movement time (MT). The ratio is <c>MTe / MT</c>. Thus, values &gt;1 indicate that the actual movement
-    /// time was too slow. Values &lt;1 indicate that the actual movement time was too fast. A value
-    /// of 1.00 indicates the actual movement time was the same as that prescribed.
-    /// </summary>
-    /// <remarks>
-    /// The maximum possible number of actual metronome ticks that could have been heard is the <b>Math.Ceiling</b> 
-    /// of this property. The minimum number of ticks that could have been heard is the <b>Math.Floor</b> of this 
-    /// property.
-    /// </remarks>
-    public double MTRatio
-    {
-        get
-        {
-            if (this.UsedMetronome)
-            {
-                double diff = _end.Time - _start.Time;
-                return diff / _tInterval;
-            }
-            return -1.0; // unused
-        }
-    }
-
-    /// <summary>
     /// For a completed trial, gets the number of target entries. If the trial was an error,
     /// it may be that the target was never entered. The most successful trials will have
     /// a target entered once and only once. If target re-entry occurs, the target was entered 
@@ -321,7 +250,7 @@ public class AGTrialData
             for (int i = 0; i < _movement.NumMoves; i++)
             {
                 TimePointR pt = _movement[i];
-                if (_thisTarget.Contains((PointR)pt)) // now inside
+                if (_thisTargetData.Contains((PointR)pt)) // now inside
                 {
                     if (!inside) // were not yet inside
                     {
@@ -347,15 +276,15 @@ public class AGTrialData
         {
             int n = 0;
 
-            double radians = PointR.Angle((PointR)_start, _thisTarget.CenterP, true); // angle of the task axis
+            double radians = PointR.Angle((PointR)_start, _thisTargetData.posR, true); // angle of the task axis
 
             for (int i = 0; i < _movement.NumMoves; i++)
             {
-                TimePointR pt = PointR.RotatePoint((PointR)_movement[i], _thisTarget.CenterP, -radians); // rotate for 0-degree task
-                if (pt.X > _thisTarget.CenterP.X + _thisTarget.Radius) // if we've broken the line tangent to the far side of the circle 
+                TimePointR pt = PointR.RotatePoint((PointR)_movement[i], _thisTargetData.posR, -radians); // rotate for 0-degree task
+                if (pt.X > _thisTargetData.posR.X + _thisTargetData.radius) // if we've broken the line tangent to the far side of the circle 
                 {
                     n++; // overshoot
-                    radians = PointR.Angle((PointR)_movement[i], _thisTarget.CenterP, true); // update for new angle from this point
+                    radians = PointR.Angle((PointR)_movement[i], _thisTargetData.posR, true); // update for new angle from this point
                 }
             }
             return n;
@@ -419,7 +348,7 @@ public class AGTrialData
         get
         {
             return this.IsError && (
-                (this.GetAe(true) < _owner.A / 2.0) || (Math.Abs(this.GetDx(true)) > 2.0 * _owner.W)
+                (this.GetAe(true) < A / 2.0) || (Math.Abs(this.GetDx(true)) > 2.0 * W)
                 );
         }
     }
@@ -455,12 +384,12 @@ public class AGTrialData
 
     #region Target
 
-    public Target3D ThisTarget => _thisTarget;
-    public Target3D LastTarget => _lastTarget;
+    public AGTargetData ThisTarget => _thisTargetData;
+    public AGTargetData LastTarget => _lastTargetData;
 
     public PointR TargetCenter
     {
-        get { return _thisTarget.CenterP; }
+        get { return _thisTargetData.posR; }
     }
 
     /// <summary>
@@ -477,7 +406,7 @@ public class AGTrialData
         {
             if (this.IsComplete)
             {
-                return _thisTarget.CenterP;
+                return _thisTargetData.posR;
             }
             return PointR.Empty;
         }
@@ -485,7 +414,7 @@ public class AGTrialData
 
     public bool TargetContains(PointR pt)
     {
-        return _thisTarget.Contains(pt);
+        return _thisTargetData.Contains(pt);
     }
 
     #endregion

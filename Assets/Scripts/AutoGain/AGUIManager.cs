@@ -94,16 +94,14 @@ public class AGUIManager : MonoBehaviour
         // 버튼 이벤트
         refButton.onClick.AddListener(() =>
         {
-            Debug.Log("Reference mode selected");
             variableSelectBox.SetActive(false);
-            AGManager.Instance.StartReferenceMode();
+            AGManager.Instance.SetGainMode(AGManager.GainMode.REFERENCE);
         });
 
         agButton.onClick.AddListener(() =>
         {
-            Debug.Log("AutoGain mode selected");
             variableSelectBox.SetActive(false);
-            AGManager.Instance.StartAutoGainMode();
+            AGManager.Instance.SetGainMode(AGManager.GainMode.AUTOGAIN);
         });
     }
 

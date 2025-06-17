@@ -75,6 +75,7 @@ public class AGMovementData
         public double MovementOffset;
     }
     #endregion
+
     private AGTrialData _owner;
     private List<TimePointR> _moves;
 

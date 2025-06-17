@@ -8,7 +8,7 @@ public class AGTargetGenerator : MonoBehaviour
 
     [Tooltip("테스트할 카메라 (비어 있으면 MainCamera 사용)")]
     public Camera cam;
-    public SimpleFirstPersonCamera cameraController;
+    public AGMouse cameraController;
 
     [Header("실험 파라미터")]
     public float minApx; // 픽셀 단위 Ampiltude(거리) 최솟값
@@ -39,9 +39,10 @@ public class AGTargetGenerator : MonoBehaviour
 
         depthD = Screen.height / (2f * pixelsPerUnit * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad / 2f));
         center = new Vector2(Screen.width / 2f, Screen.height / 2f);
-
+        
         Vector3 screenBottomLeft = new Vector3(margin_w, margin_h, depthD); // 왼쪽 아래 모서리
         Vector3 screenTopright = new Vector3(Screen.width - margin_w, Screen.height - margin_h, depthD); // 오른쪽 위 모서리
+        cameraController.ResetCameraRotation(); // 카메라 회전 초기화
         worldBottomLeft = cam.ScreenToWorldPoint(screenBottomLeft);
         worldTopRight = cam.ScreenToWorldPoint(screenTopright);
 
@@ -74,15 +75,18 @@ public class AGTargetGenerator : MonoBehaviour
 
             if(++safety > 1000)
             {
-                Debug.LogWarning("타겟 생성 실패: 너무 많은 시도");
-                cameraController.ResetCameraRotation();
-                return AGTargetData.Empty; // 너무 많은 시도 후 실패
+                Debug.LogWarning("타겟 생성 실패: 많은 시도 반복 후에도 정상적인 타겟 생성 불가");
+                // 이 경우 타겟 생성 평면 밖으로 카메라가 벗어났을 확률이 크므로 카메라 회전값 초기화 후 재시도할 것
+                // cameraController.ResetCameraRotation(); 
+                return AGTargetData.Empty;
             }
         } while (!isValid);
 
+        // 타겟 width 조정
+        // 1. 카메라와 타겟 사이의 거리를 depthD로 설정
+        // 2. 타겟의 scale을 worldDiameter로 설정
         worldPos = worldPos.normalized * depthD;
         targetObj.transform.position = worldPos;
-
         float worldDiameter = wc / pixelsPerUnit;
         targetObj.transform.localScale = Vector3.one * worldDiameter;
 

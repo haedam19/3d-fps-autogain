@@ -24,16 +24,20 @@ public class AGManager : MonoBehaviour
     public enum GameState { Entrance, Standby, InBlock, InterBlock, Exit }
     public GameState currentState = GameState.Entrance; // 현재 게임 상태
 
+    public enum GainMode { REFERENCE, AUTOGAIN };
+    public GainMode currentGainMode = GainMode.REFERENCE; // 현재 Gain 모드
+
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
-    [SerializeField] SimpleFirstPersonCamera camController;
-
-    AGTrialData lastTrial;
-    AGTrialData curTrial;
+    [SerializeField] AGMouse agMouse;
+    AutoGain autoGain;
+    public static AutoGain AG { get { return Instance.autoGain; } }
 
     [SerializeField] int completeTrialCount = 0; // 완료된 Trial의 수
     [SerializeField] int totalTrialCount = 400; // 총 Trial의 수
     [SerializeField] int trialsPerBlock = 80; // 블록당 Trial의 수
+
+    AGTrialData _tdata;
 
     private void Awake()
     {
@@ -42,32 +46,34 @@ public class AGManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        else if (instance == null)
-        {
-            instance = this;
-        }
+        instance = this;
+        currentState = GameState.Entrance;
+        agMouse.Init();
 
-        curTrial = new AGTrialData();
-    }
+        _tdata = new AGTrialData();
 
-    // Start is called before the first frame update
-    void Start()
-    {
         uiManager.ShowIndependentVariableSelectionUI();
     }
 
-    public void StartAutoGainMode()
+    /// <summary> AGMouse 객체를 생성해 Gain 모드를 설정하고 실험을 시작합니다. </summary>
+    public void SetGainMode(GainMode gainMode)
     {
+        currentGainMode = gainMode;
         currentState = GameState.Standby;
-        targetGenerator.GenerateNextTarget();
-        camController.enabled = true; // 카메라 컨트롤러 활성화
-    }
+        agMouse.enabled = true;
 
-    public void StartReferenceMode()
-    {
-        currentState = GameState.Standby;
+        if (gainMode == GainMode.AUTOGAIN)
+        {
+            autoGain = new AutoGain();
+            agMouse.useAutoGain = true;
+        }
+        else
+        {
+            autoGain = null;
+            agMouse.useAutoGain = false;
+        }
+
         targetGenerator.GenerateNextTarget();
-        camController.enabled = true; // 카메라 컨트롤러 활성화
     }
 
 
@@ -89,4 +95,32 @@ public class AGManager : MonoBehaviour
 
         }
     }
+
+    /// <summary>
+    /// AGMouse로부터 마우스 이동 이벤트를 받아 처리합니다.
+    /// </summary>
+    /// <param name="move"></param>
+    public void MouseMove(MouseMove move)
+    {
+        Vector2 unityCoordCurrentMove = move.currentPos;
+        Vector2 unityScreenCoordCurrentMove = unityCoordCurrentMove + new Vector2(Screen.width / 2, Screen.height / 2);
+        PointR curPos = (PointR)unityScreenCoordCurrentMove;
+
+
+    }
+
+    /// <summary>
+    /// 테스트 중 발생한 클릭 이벤트를 처리합니다.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="time"></param>
+    public void MouseClick(Vector2 pos, long time)
+    {
+        // 블록 시작지점 또는 블록 중간에 클릭이 발생한 경우에는 처리 X
+        if (currentState != GameState.Standby && currentState != GameState.InBlock)
+            return;
+
+
+    }
+
 }

@@ -24,7 +24,7 @@ public class FittsMouseTracker : MonoBehaviour
     // GameManager3D가 없는 상태에서 단위테스트시 true로 설정
     [SerializeField] bool unitTest = false;
 
-    bool sensitivitySetting = true;
+    bool sensitivitySettingPhase = true;
     [SerializeField] GameObject sensitivityView;
     [SerializeField] TMP_Text sensitivityText;
 
@@ -83,11 +83,11 @@ public class FittsMouseTracker : MonoBehaviour
 
     private void Update()
     {
-        if(sensitivitySetting)
+        if(sensitivitySettingPhase)
         {
             if(Input.GetKey(KeyCode.Space))
             {
-                sensitivitySetting = false;
+                sensitivitySettingPhase = false;
                 Destroy(sensitivityView);
             }
             else
@@ -126,7 +126,7 @@ public class FittsMouseTracker : MonoBehaviour
 
         _isClicked = Mouse.press.wasPressedThisFrame;
 
-        if (unitTest || sensitivitySetting ) return;
+        if (unitTest || sensitivitySettingPhase ) return;
 
         if (_delta.sqrMagnitude > 0)
             GameManager3D.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, _curTime));

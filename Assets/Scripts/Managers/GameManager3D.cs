@@ -41,11 +41,6 @@ public class GameManager3D : MonoBehaviour
     public UIManager3D uiManager;
     public FittsMouseTracker mouseTracker;
 
-    [Header("GameStatus")]
-    public bool playing;
-    public bool inExporting;
-    public float startTime;
-
     [Header("Statistics")]
     public int totalTrialCount;
 
@@ -104,8 +99,6 @@ public class GameManager3D : MonoBehaviour
         // 타이머 초기화
         Timer.Reset();
 
-        playing = false;
-        inExporting = false;
         mouseTracker.Init();
         mouseTracker.enabled = false;
 

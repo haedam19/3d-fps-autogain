@@ -7,7 +7,7 @@ public struct AGTargetData
     public Vector3 posWorld;
     public Vector2 posScreen;
     public PointR posR;
-    public float radius;
+    public double radius;
     public float w;
     
     public static AGTargetData Empty = new AGTargetData {

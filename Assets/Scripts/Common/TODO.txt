@@ -1,0 +1,2 @@
+Fitts Test 관련 스크립트와 Auto Gain 관련 스크립트들에 공통된 기능 많음.
+공통부 base class로 정리하기

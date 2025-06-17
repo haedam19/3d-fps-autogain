@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18269949, g: 0.22840798, b: 0.30709916, a: 1}
+  m_IndirectSpecularColor: {r: 0.18269989, g: 0.22840859, b: 0.30710015, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -182,9 +182,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentState: 0
+  currentGainMode: 1
   targetGenerator: {fileID: 105993113}
   uiManager: {fileID: 55267410}
-  camController: {fileID: 2073934693}
+  agMouse: {fileID: 2073934691}
   completeTrialCount: 0
   totalTrialCount: 400
   trialsPerBlock: 80
@@ -233,7 +234,7 @@ MonoBehaviour:
     type: 3}
   targetObj: {fileID: 0}
   cam: {fileID: 0}
-  cameraController: {fileID: 2073934693}
+  cameraController: {fileID: 0}
   minApx: 16
   maxApx: 512
   minWpx: 16
@@ -790,8 +791,6 @@ GameObject:
   - component: {fileID: 2073934687}
   - component: {fileID: 2073934690}
   - component: {fileID: 2073934691}
-  - component: {fileID: 2073934692}
-  - component: {fileID: 2073934693}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -858,14 +857,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &2073934689
-Transform:
+--- !u!224 &2073934689
+RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2073934686}
-  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -873,6 +871,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2073934690
 MonoBehaviour:
   m_ObjectHideFlags: 64
@@ -924,43 +927,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2073934686}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 351e7f3bf837577488905f744ae83202, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  unitTest: 0
-  sensitivityView: {fileID: 0}
-  sensitivityText: {fileID: 0}
-  gain:
-    type: 0
-  sensitivity: 0.1
---- !u!114 &2073934692
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2073934686}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be7f2c80d2e9b064d8dfa0a6975caa8d, type: 3}
+  m_Script: {fileID: 11500000, guid: 63e71fa8638bfd8449e631dded03f775, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cam: {fileID: 0}
---- !u!114 &2073934693
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2073934686}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5156f922f0644ec45a40916bdff95892, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sensitivity: 2.5
+  recordingMode: 1
+  useAutoGain: 1
+  sensitivity: 10
 --- !u!1001 &3885226699822569657
 PrefabInstance:
   m_ObjectHideFlags: 0
