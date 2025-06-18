@@ -1,18 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public struct AGTargetData
 {
     public Vector3 posWorld;
-    public Vector2 posScreen;
+    public Vector2 posRefScreen;
     public PointR posR;
     public double radius;
     public float w;
     
     public static AGTargetData Empty = new AGTargetData {
                                                 posWorld = Vector3.zero,
-                                                posScreen = Vector2.zero,
+                                                posRefScreen = Vector2.zero,
                                                 posR = PointR.Empty,
                                                 radius = 0f,
                                                 w = 0f
@@ -25,7 +26,7 @@ public struct AGTargetData
 
     public bool IsEmpty()
     {
-        return posWorld == Vector3.zero && posScreen == Vector2.zero && posR == PointR.Empty && radius == 0f && w == 0f;
+        return posWorld == Vector3.zero && posRefScreen == Vector2.zero && posR == PointR.Empty && radius == 0f && w == 0f;
     }
 }
 
@@ -39,10 +40,10 @@ public class AGTarget : MonoBehaviour
         get => data.posWorld;
         set => data.posWorld = value;
     }
-    public Vector2 posScreen
+    public Vector2 posRefScreen
     {
-        get => data.posScreen;
-        set => data.posScreen = value;
+        get => data.posRefScreen;
+        set => data.posRefScreen = value;
     }
     public PointR posR
     {
@@ -69,8 +70,17 @@ public class AGTarget : MonoBehaviour
     public void RecordTargetData(float diameterInPixel)
     {
         posWorld = transform.position;
-        posScreen = Camera.main.WorldToScreenPoint(posWorld);
-        posR = (PointR)posScreen;
+
+        float _d = Screen.height / (2 * Mathf.Tan(Camera.main.fieldOfView * Mathf.Deg2Rad / 2));
+        Vector3 cameraPos = Vector3.zero; // Camera.main.transform.position;
+        Vector3 dir = (posWorld - cameraPos).normalized;
+
+        float t = (_d - cameraPos.z) / dir.z;
+        Vector3 intersection = cameraPos + dir * t;
+
+        posRefScreen = (Vector2)intersection + new Vector2(Screen.width / 2f, Screen.height / 2f);
+
+        posR = (PointR)posRefScreen;
         w = diameterInPixel;
         radius = diameterInPixel / 2f;
     }

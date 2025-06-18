@@ -25,7 +25,7 @@ public class AGManager : MonoBehaviour
     }
     #endregion
 
-    public enum GameState { Entrance, Standby, InBlock, InterBlock, Exit }
+    public enum GameState { Entrance, Standby, InTest, InterTest, Exit }
     public GameState currentState = GameState.Entrance; // 현재 게임 상태
 
     public enum GainMode { REFERENCE, AUTOGAIN };
@@ -39,9 +39,8 @@ public class AGManager : MonoBehaviour
 
     [SerializeField] int practiceTrialCount = 10; // 연습 Trial의 수 (시작 Trial 포함)
     [SerializeField] int totalTrialCount = 400; // 총 Trial의 수
-    [SerializeField] int trialsPerBlock = 80; // 블록당 Trial의 수
 
-    List<AGTrialData> trials; // 0번은 시작 Trial
+    List<AGTrialData> trials;
     AGTrialData _tdata;
 
     private void Awake()
@@ -54,7 +53,8 @@ public class AGManager : MonoBehaviour
         instance = this;
         currentState = GameState.Entrance;
         agMouse.Init();
-
+        agMouse.enabled = false;
+        
         trials = new List<AGTrialData>(totalTrialCount);
 
         uiManager.ShowIndependentVariableSelectionUI();
@@ -64,7 +64,6 @@ public class AGManager : MonoBehaviour
     public void SetGainMode(GainMode gainMode)
     {
         currentGainMode = gainMode;
-        currentState = GameState.Standby;
         agMouse.enabled = true;
 
         if (gainMode == GainMode.AUTOGAIN)
@@ -78,34 +77,34 @@ public class AGManager : MonoBehaviour
             agMouse.useAutoGain = false;
         }
 
-        targetGenerator.GenerateNextTarget();
+        StartTest();
     }
 
     public void StartTest()
     {
+        agMouse.enabled = true;
+
         AGTargetData targetData = targetGenerator.GenerateNextTarget();
         _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, AGTargetData.Empty, targetData);
         currentState = GameState.Standby;
+    }
+
+    public void StopTest()
+    {
+        agMouse.enabled = false;
+        currentState = GameState.InterTest;
+    }
+
+    public void FinishTest()
+    {
+        Debug.Log("Test Finished. Total Trials: " + trials.Count);
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        if (currentState == GameState.Entrance)
-            return;
 
-        // 마우스 클릭 시 다음 타겟 생성 (실험용)
-        if (Input.GetMouseButtonDown(0))
-        {
-            targetGenerator.GenerateNextTarget();
-            if ( currentState == GameState.InBlock)
-            {
-                uiManager.ShowSubmovementHUD(true);
-            }
-            currentState = GameState.InBlock;
-
-        }
     }
 
     /// <summary>
@@ -129,17 +128,20 @@ public class AGManager : MonoBehaviour
     public void MouseClick(Vector2 pos, long time)
     {
         // 블록 시작지점 또는 블록 중간에 클릭이 발생한 경우에는 처리 X
-        if (currentState != GameState.Standby && currentState != GameState.InBlock)
+        if (currentState != GameState.Standby && currentState != GameState.InTest)
             return;
 
         TimePointR clickTimePos = new TimePointR((PointR)(pos + new Vector2(Screen.width / 2, Screen.height / 2)), time);
 
-        if (trials.Count == 0 || PointR.Distance((PointR)_tdata.Start, (PointR)clickTimePos) > MinDblClickDist)
+        if (_tdata.IsStartTrial || PointR.Distance((PointR)_tdata.Start, (PointR)clickTimePos) > MinDblClickDist)
             NextTrial(clickTimePos);
     }
 
     void NextTrial(TimePointR click)
     {
+        string debugMsg = $"click: {(PointR)click}, target: {_tdata.ThisTarget.posR}";
+        Debug.Log(debugMsg);
+
         if (currentState == GameState.Standby) // 시작 trial인 경우
         {
             if (!_tdata.TargetContains((PointR)click)) // click missed start target
@@ -148,25 +150,57 @@ public class AGManager : MonoBehaviour
             }
             else // start first actual trial
             {
-                trials.Add(_tdata); // 시작 Trial 기록
+                AGTrialData lastTrial = _tdata;
 
-                AGTargetData nextAGTargetData;
-                while(true)
+                AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
+                if (nextAGTargetData.IsEmpty())
+                    StopTest(); // 타겟 생성 실패 시 테스트 정지
+                else
                 {
-                    nextAGTargetData = targetGenerator.GenerateNextTarget();
-
-                    if (!nextAGTargetData.IsEmpty())
-                        break; // 유효한 타겟 생성
-                    else
-                        agMouse.ResetCameraRotation(); // 타겟 생성 실패 시 카메라 회전 초기화 후 재시도
+                    _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, lastTrial.ThisTarget, nextAGTargetData);
+                    _tdata.Start = click;
+                    currentState = GameState.InTest;
                 }
             }
+        }
+        else if (currentState == GameState.InTest)
+        {
+            _tdata.End = click;
+            _tdata.NormalizeTimes();
+            trials.Add(_tdata);
+            LogTrial(_tdata);
+            if (_tdata.IsError)
+                DoError();
+
+            if (trials.Count >= totalTrialCount) // 모든 Trial이 끝난 경우
+            {
+                FinishTest();
+                return;
+            }
+
+            AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
+            if (nextAGTargetData.IsEmpty())
+                StopTest(); // 타겟 생성 실패 시 테스트 정지
+            else
+            {
+                _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, trials[trials.Count - 1].ThisTarget, nextAGTargetData);
+                _tdata.Start = click;
+            }
+            
         }
     }
 
     private void DoError()
     {
-        // TODO: IMPLEMENT
+        Debug.Log("Error!");
+    }
+
+    void LogTrial(AGTrialData tdata)
+    {
+        int index = trials.Count;
+        Debug.Log($"Trial {index}/{totalTrialCount}\n" +
+                  $"Start: {tdata.Start}, End: {tdata.End}, " +
+                  $"Error: {tdata.IsError}");
     }
 
 }

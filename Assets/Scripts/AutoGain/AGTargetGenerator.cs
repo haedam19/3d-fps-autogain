@@ -57,7 +57,7 @@ public class AGTargetGenerator : MonoBehaviour
         // targetObj.GetComponent<Target3D>().TargetOn();
 
         float xc, yc, wc;
-        Vector3 worldPos, screenPos;
+        Vector3 worldPos, currentScreenPos;
 
         wc = Random.Range(minWpx, maxWpx);
 
@@ -68,9 +68,9 @@ public class AGTargetGenerator : MonoBehaviour
             xc = Random.Range(worldBottomLeft.x, worldTopRight.x);
             yc = Random.Range(worldBottomLeft.y, worldTopRight.y);
             worldPos = new Vector3(xc, yc, depthD);
-            screenPos = cam.WorldToScreenPoint(worldPos);
+            currentScreenPos = cam.WorldToScreenPoint(worldPos); // 현재 카메라 스크린 좌표로 변환
 
-            float dist = Vector2.Distance(screenPos, center);
+            float dist = Vector2.Distance(currentScreenPos, center);
             isValid = dist >= minApx && dist <= maxApx;
 
             if(++safety > 1000)

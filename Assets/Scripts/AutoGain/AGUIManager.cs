@@ -11,6 +11,7 @@ using TMPro;
 public class AGUIManager : MonoBehaviour
 {
     private GameObject variableSelectBox;
+    private GameObject stopMsgBox;
 
     public void ShowIndependentVariableSelectionUI()
     {
@@ -102,6 +103,93 @@ public class AGUIManager : MonoBehaviour
         {
             variableSelectBox.SetActive(false);
             AGManager.Instance.SetGainMode(AGManager.GainMode.AUTOGAIN);
+        });
+    }
+
+    public void ShowStopMsgBox(bool interrupted)
+    {
+        string content;
+        if (interrupted)
+        {
+            content = "The next target could not be positioned properly,\n" +
+                "so the experiment has been interrupted.\n" +
+                "Press the Continue button to resume.";
+        }
+        else
+        {
+            content = "Experiment has been paused.\nPress the Continue button to resume.";
+        }
+
+        // 이미 메시지 박스가 있으면 중복 생성 방지
+        if (stopMsgBox != null)
+        {
+            stopMsgBox.SetActive(true);
+            // 텍스트 갱신
+            var msgText = stopMsgBox.transform.Find("MsgText")?.GetComponent<Text>();
+            if (msgText != null)
+            {
+                msgText.text = content;
+            }
+            return;
+        }
+
+        // Canvas 찾기 또는 생성
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null)
+        {
+            GameObject canvasObj = new GameObject("Canvas");
+            canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<CanvasScaler>();
+            canvasObj.AddComponent<GraphicRaycaster>();
+        }
+
+        // 메시지 박스 패널 생성
+        stopMsgBox = new GameObject("ExpStopMsgBox");
+        stopMsgBox.transform.SetParent(canvas.transform, false);
+        RectTransform panelRect = stopMsgBox.AddComponent<RectTransform>();
+        panelRect.sizeDelta = new Vector2(800, 600);
+        Image panelImage = stopMsgBox.AddComponent<Image>();
+        panelImage.color = new Color(0, 0, 0, 0.95f);
+
+        // 텍스트 생성
+        GameObject textObj = new GameObject("MsgText");
+        textObj.transform.SetParent(stopMsgBox.transform, false);
+        Text msgTextComp = textObj.AddComponent<Text>();
+        msgTextComp.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        msgTextComp.alignment = TextAnchor.MiddleCenter;
+        msgTextComp.color = Color.white;
+        msgTextComp.fontSize = 32;
+        msgTextComp.rectTransform.anchoredPosition = new Vector2(0, 90);
+        msgTextComp.rectTransform.sizeDelta = new Vector2(760, 360);
+        msgTextComp.text = content;
+
+        // Continue 버튼 생성
+        GameObject buttonObj = new GameObject("ContinuetButton");
+        buttonObj.transform.SetParent(stopMsgBox.transform, false);
+        Button nextButton = buttonObj.AddComponent<Button>();
+        Image btnImage = buttonObj.AddComponent<Image>();
+        btnImage.color = new Color(0.2f, 0.5f, 1f, 1f);
+        RectTransform btnRect = buttonObj.GetComponent<RectTransform>();
+        btnRect.sizeDelta = new Vector2(320, 80);
+        btnRect.anchoredPosition = new Vector2(0, -200);
+
+        // 버튼 텍스트
+        GameObject btnTextObj = new GameObject("ButtonText");
+        btnTextObj.transform.SetParent(buttonObj.transform, false);
+        Text btnText = btnTextObj.AddComponent<Text>();
+        btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        btnText.text = "Continue";
+        btnText.alignment = TextAnchor.MiddleCenter;
+        btnText.color = Color.white;
+        btnText.fontSize = 20;
+        btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
+
+        // 버튼 클릭 이벤트 등록
+        nextButton.onClick.AddListener(() =>
+        {
+            stopMsgBox.SetActive(false);
+            AGManager.Instance.StartTest();
         });
     }
 

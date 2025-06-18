@@ -115,6 +115,14 @@ public class AGTrialData
 
     #region Measured Values
 
+    public bool IsStartTrial
+    {
+        get
+        {
+            return _lastTargetData.IsEmpty();
+        }
+    }
+
     /// <summary>
     /// Gets whether or not this trial has been completed. A completed trial has been
     /// performed and therefore has a non-zero ending time-stamp.
@@ -384,4 +392,14 @@ public class AGTrialData
 
     #endregion
 
+    override public string ToString()
+    {
+        string startPos = $"({_start.X}, {_start.Y})";
+        string endPos = $"({_end.X}, {_end.Y})";
+
+        return $"(Practice: {_practice}, " +
+        $"Start: {_start}, End: {_end}\n" +
+        $"Target: {_thisTargetData}\n" +
+        $"A: {A}, W: {W}, ID: {ID}, Axis: {Axis}";
+    }
 }

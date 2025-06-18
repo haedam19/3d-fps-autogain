@@ -48,9 +48,7 @@ public class AGMouse : MonoBehaviour
 
     private void OnEnable()
     {
-        transform.rotation = Quaternion.identity; // 카메라 회전 초기화
-        pitch = 0f;
-        yaw = 0f;
+        ResetCameraRotation();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -79,7 +77,14 @@ public class AGMouse : MonoBehaviour
         long deltaTime = _curTime - _lastTime;
 
         double deltaYaw, deltaPitch;
-        AGManager.AG.getTranslatedValue(_delta.x, _delta.y, deltaTime, out deltaYaw, out deltaPitch);
+        if (useAutoGain)
+            AGManager.AG.getTranslatedValue(_delta.x, _delta.y, deltaTime, out deltaYaw, out deltaPitch);
+        else
+        {
+            deltaYaw = _delta.x * sensitivity * (float)deltaTime / 1000f;
+            deltaPitch = -_delta.y * sensitivity * (float)deltaTime / 1000f;
+        }
+        
 
         // 1. 카메라 회전
         yaw += (float)deltaYaw;
@@ -96,7 +101,6 @@ public class AGMouse : MonoBehaviour
 
         _lastPos = _currentPos;
         _currentPos = new Vector2(intersection.x, intersection.y);
-
         _isClicked = Mouse.press.wasPressedThisFrame;
 
         if (!recordingMode) return;

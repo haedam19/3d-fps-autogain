@@ -186,9 +186,8 @@ MonoBehaviour:
   targetGenerator: {fileID: 105993113}
   uiManager: {fileID: 55267410}
   agMouse: {fileID: 2073934691}
-  completeTrialCount: 0
+  practiceTrialCount: 10
   totalTrialCount: 400
-  trialsPerBlock: 80
 --- !u!114 &55267410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,7 +233,7 @@ MonoBehaviour:
     type: 3}
   targetObj: {fileID: 0}
   cam: {fileID: 0}
-  cameraController: {fileID: 0}
+  cameraController: {fileID: 2073934691}
   minApx: 16
   maxApx: 512
   minWpx: 16
