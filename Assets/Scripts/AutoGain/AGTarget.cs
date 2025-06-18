@@ -22,6 +22,11 @@ public struct AGTargetData
     {
         return PointR.Distance(posR, p) <= radius;
     }
+
+    public bool IsEmpty()
+    {
+        return posWorld == Vector3.zero && posScreen == Vector2.zero && posR == PointR.Empty && radius == 0f && w == 0f;
+    }
 }
 
 public class AGTarget : MonoBehaviour
@@ -44,7 +49,7 @@ public class AGTarget : MonoBehaviour
         get => data.posR;
         set => data.posR = value;
     }
-    public float radius
+    public double radius
     {
         get => data.radius;
         set => data.radius = value;

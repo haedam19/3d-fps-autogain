@@ -54,7 +54,7 @@ public class AGTargetGenerator : MonoBehaviour
             Destroy(targetObj);
 
         targetObj = Instantiate(targetPrefab, transform);
-        targetObj.GetComponent<Target3D>().TargetOn();
+        // targetObj.GetComponent<Target3D>().TargetOn();
 
         float xc, yc, wc;
         Vector3 worldPos, screenPos;

@@ -54,7 +54,6 @@ public class AGTrialData
     #region Fields
     protected int _number; // 1-based number of this trial; trial 0 is reserved for the start area for the condition
     protected bool _practice; // true if this is a practice trial; false otherwise
-    protected long _tInterval; // the normative movement time interval in milliseconds, or -1L. (메트로놈 안 쓰면 필요 X)
 
     protected TimePointR _start; // the click point that started this trial
     protected TimePointR _end; // the click point that ended this trial
@@ -62,7 +61,6 @@ public class AGTrialData
     protected AGMovementData _movement; // the movement associated with this trial
     private AGTargetData _thisTargetData;
     private AGTargetData _lastTargetData;
-    private PointR _isoCenter;
 
     public double A;
     public double W;
@@ -85,17 +83,15 @@ public class AGTrialData
     /// <param name="index">The 0-based index number of this trial.</param>
     /// <param name="practice">True if this trial is practice; false otherwise. Practice trials aren't included in any calculations.</param>
     /// <param name="tInterval">The metronome time interval in milliseconds, or -1L if unused.</param>
-    public AGTrialData(int index, bool practice, AGTargetData lastTarget, AGTargetData thisTarget, PointR center, long tInterval)
+    public AGTrialData(int index, bool practice, AGTargetData lastTarget, AGTargetData thisTarget)
     {
         _number = index;
         _practice = practice;
-        _tInterval = tInterval;
         _start = TimePointR.Empty;
         _end = TimePointR.Empty;
         _movement = new AGMovementData(this);
         _lastTargetData = lastTarget;
         _thisTargetData = thisTarget;
-        _isoCenter = center;
     }
 
     #endregion
@@ -108,11 +104,7 @@ public class AGTrialData
     }
     #endregion
 
-    #region Condition Values: Number, IsStartAreaTrial, ID, Axis
-
-    public int Number { get { return _number; } }
-
-    public bool IsStartAreaTrial { get { return _number == 0; } }
+    #region Condition Values: ID, Axis
 
     public double ID { get { return Math.Log((double)A / W + 1.0, 2.0); } }
 
@@ -321,7 +313,7 @@ public class AGTrialData
     /// mean.</remarks>
     public double GetDx(bool bivariate)
     {
-        return bivariate ? PointR.Distance(_thisTarget.CenterP, (PointR)_end) : this.NormalizedEnd.X; // nend is relative to (0,0)
+        return bivariate ? PointR.Distance(_thisTargetData.posR, (PointR)_end) : this.NormalizedEnd.X; // nend is relative to (0,0)
     }
 
     #endregion
@@ -332,7 +324,7 @@ public class AGTrialData
     {
         get
         {
-            return !_thisTarget.Contains((PointR)_end);
+            return !_thisTargetData.Contains((PointR)_end);
         }
     }
 
@@ -353,33 +345,6 @@ public class AGTrialData
         }
     }
 
-    /// <summary>
-    /// Gets a value indicating whether or not this trial had a movement time 
-    /// that is a temporal outlier. A temporal outlier is considered unduly far
-    /// from the normative time interval. It is defined by a movement time that 
-    /// is less than 75% of the normative movement time (too fast), or more than 
-    /// 125% of the normative movement time (too slow).
-    /// </summary>
-    /// <example>
-    /// If a metronome movement time (MT) is set to 500 ms, a temporal outlier
-    /// will occur if the effective movement time (MTe) is either less than 375 ms
-    /// or greater than 625 ms. That amounts to 500 +/- 125 ms.
-    /// </example>
-    public bool IsTemporalOutlier
-    {
-        get
-        {
-            if (_tInterval != -1.0)
-            {
-                double diff = _end.Time - _start.Time;
-                return (
-                    (diff < _tInterval * 0.75) ||
-                    (diff > _tInterval * 1.25)
-                    );
-            }
-            return false;
-        }
-    }
     #endregion
 
     #region Target
