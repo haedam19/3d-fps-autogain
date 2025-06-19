@@ -10,6 +10,9 @@ using TMPro;
 /// </summary>
 public class AGUIManager : MonoBehaviour
 {
+    TMP_Text lastTrialText;
+    TMP_Text trialCountText;
+
     private GameObject variableSelectBox;
     private GameObject stopMsgBox;
 
@@ -193,8 +196,8 @@ public class AGUIManager : MonoBehaviour
         });
     }
 
-    public void ShowSubmovementHUD(bool isCorrect)
+    public void UpdateStatusHUD(int completeTrial, int maxTrial, AGTrialData lastTrial)
     {
- 
+
     }
 }

@@ -13,9 +13,8 @@ GameObject:
   - component: {fileID: 2238169183169496684}
   - component: {fileID: 4722866205040442044}
   - component: {fileID: 4593565677713383634}
-  - component: {fileID: 780788567964251136}
   m_Layer: 0
-  m_Name: StartingTarget3D
+  m_Name: AGTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -119,17 +118,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d19e7031b820394cb8cc5015d0c31af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &780788567964251136
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2704050834720211060}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1dfabcc48ba8b33409b4f1fce35ca762, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_onMaterial: {fileID: 2100000, guid: 6bab817a9aaccf940b462e81fc9385da, type: 2}
-  m_offMaterial: {fileID: 2100000, guid: 4d2ce9cf6cdbf71438512f5499d77be0, type: 2}

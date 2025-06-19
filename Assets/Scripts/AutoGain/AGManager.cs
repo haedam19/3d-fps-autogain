@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class AGManager : MonoBehaviour
 {
@@ -89,10 +90,12 @@ public class AGManager : MonoBehaviour
         currentState = GameState.Standby;
     }
 
-    public void StopTest()
+    public void StopTest(bool interrupted)
     {
         agMouse.enabled = false;
+        _tdata = null;
         currentState = GameState.InterTest;
+        uiManager.ShowStopMsgBox(interrupted);
     }
 
     public void FinishTest()
@@ -104,7 +107,13 @@ public class AGManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (currentState == GameState.InTest)
+            {
+                StopTest(false);
+            }
+        }
     }
 
     /// <summary>
@@ -154,7 +163,7 @@ public class AGManager : MonoBehaviour
 
                 AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
                 if (nextAGTargetData.IsEmpty())
-                    StopTest(); // 타겟 생성 실패 시 테스트 정지
+                    StopTest(true); // 타겟 생성 실패 시 테스트 정지
                 else
                 {
                     _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, lastTrial.ThisTarget, nextAGTargetData);
@@ -180,7 +189,7 @@ public class AGManager : MonoBehaviour
 
             AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
             if (nextAGTargetData.IsEmpty())
-                StopTest(); // 타겟 생성 실패 시 테스트 정지
+                StopTest(true); // 타겟 생성 실패 시 테스트 정지
             else
             {
                 _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, trials[trials.Count - 1].ThisTarget, nextAGTargetData);
