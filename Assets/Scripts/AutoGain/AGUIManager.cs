@@ -10,8 +10,8 @@ using TMPro;
 /// </summary>
 public class AGUIManager : MonoBehaviour
 {
-    TMP_Text lastTrialText;
-    TMP_Text trialCountText;
+    [SerializeField] TMP_Text lastTrialText;
+    [SerializeField] TMP_Text trialCountText;
 
     private GameObject variableSelectBox;
     private GameObject stopMsgBox;
@@ -198,6 +198,20 @@ public class AGUIManager : MonoBehaviour
 
     public void UpdateStatusHUD(int completeTrial, int maxTrial, AGTrialData lastTrial)
     {
+        AGTargetData targetData = lastTrial.ThisTarget;
+        double endX = lastTrial.End.X;
+        double endY = lastTrial.End.Y;
+        double targetPosX = targetData.posR.X;
+        double targetPosY = targetData.posR.Y;
+        bool IsError = lastTrial.IsError;
+        
+        string lastTrialInfo = $"Last Target: ({targetPosX:F1}, {targetPosY:F1})\nLast Click: ({endX:F1}, {endY:F1})";
+        string trialCountInfo = $"Trials: {completeTrial}/{maxTrial}";
 
+        Color nextColor = IsError ? Color.yellow : Color.white;
+        lastTrialText.text = lastTrialInfo;
+        lastTrialText.color = nextColor;
+        trialCountText.text = trialCountInfo;
+        trialCountText.color = nextColor;
     }
 }

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18269989, g: 0.22840859, b: 0.30710015, a: 1}
+  m_IndirectSpecularColor: {r: 0.18269949, g: 0.22840798, b: 0.30709916, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -186,8 +186,8 @@ MonoBehaviour:
   targetGenerator: {fileID: 105993113}
   uiManager: {fileID: 55267410}
   agMouse: {fileID: 2073934691}
-  practiceTrialCount: 10
-  totalTrialCount: 400
+  practiceTrialCount: 5
+  totalTrialCount: 30
 --- !u!114 &55267410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,6 +200,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82d4335f7f6ac8a4ea7a612957d441ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lastTrialText: {fileID: 1020144114}
+  trialCountText: {fileID: 183175516}
 --- !u!1 &105993112
 GameObject:
   m_ObjectHideFlags: 0
@@ -1239,7 +1241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recordingMode: 1
   useAutoGain: 1
-  sensitivity: 10
+  sensitivity: 4
 --- !u!1001 &3885226699822569657
 PrefabInstance:
   m_ObjectHideFlags: 0

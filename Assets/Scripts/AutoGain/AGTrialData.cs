@@ -123,6 +123,8 @@ public class AGTrialData
         }
     }
 
+    public bool IsPractice { get {  return _practice; } }
+
     /// <summary>
     /// Gets whether or not this trial has been completed. A completed trial has been
     /// performed and therefore has a non-zero ending time-stamp.

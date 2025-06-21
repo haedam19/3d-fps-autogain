@@ -1,6 +1,8 @@
 using MouseLog;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Enumeration;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -39,11 +41,12 @@ public class AGManager : MonoBehaviour
     public static AutoGain AG { get { return Instance.autoGain; } }
 
     [SerializeField] int practiceTrialCount = 10; // 연습 Trial의 수 (시작 Trial 포함)
-    [SerializeField] int totalTrialCount = 400; // 총 Trial의 수
+    [SerializeField] int totalTrialCount = 30; // 총 Trial의 수
 
     List<AGTrialData> trials;
     AGTrialData _tdata;
 
+    private string gameLogfilePath; // 게임 실행 관련 로그 기록 경로
     private void Awake()
     {
         if (instance != null && instance != this)
@@ -52,6 +55,13 @@ public class AGManager : MonoBehaviour
             return;
         }
         instance = this;
+
+#if UNITY_EDITOR
+        gameLogfilePath = Application.dataPath + "/Log";
+#elif UNITY_STANDALONE_WIN
+        gameLogfilePath = Application.persistentDataPath;
+#endif
+
         currentState = GameState.Entrance;
         agMouse.Init();
         agMouse.enabled = false;
@@ -100,7 +110,17 @@ public class AGManager : MonoBehaviour
 
     public void FinishTest()
     {
-        Debug.Log("Test Finished. Total Trials: " + trials.Count);
+        string filename = AGCSVExporter.GetTimestampedFilename();
+        string path = Path.Combine(gameLogfilePath, filename);
+        try
+        {
+            AGCSVExporter.ExportTrialsToCSV(trials, path);
+            Debug.Log("CSV export success: " + path);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("CSV export failed: " + ex.Message);
+        }
     }
 
 
@@ -148,8 +168,6 @@ public class AGManager : MonoBehaviour
 
     void NextTrial(TimePointR click)
     {
-        string debugMsg = $"click: {(PointR)click}, target: {_tdata.ThisTarget.posR}";
-        Debug.Log(debugMsg);
 
         if (currentState == GameState.Standby) // 시작 trial인 경우
         {
@@ -168,6 +186,8 @@ public class AGManager : MonoBehaviour
                 {
                     _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, lastTrial.ThisTarget, nextAGTargetData);
                     _tdata.Start = click;
+                    _tdata.A = PointR.Distance((PointR)click, nextAGTargetData.posR);
+                    _tdata.W = nextAGTargetData.w;
                     currentState = GameState.InTest;
                 }
             }
@@ -177,7 +197,7 @@ public class AGManager : MonoBehaviour
             _tdata.End = click;
             _tdata.NormalizeTimes();
             trials.Add(_tdata);
-            LogTrial(_tdata);
+            uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
             if (_tdata.IsError)
                 DoError();
 
@@ -194,6 +214,8 @@ public class AGManager : MonoBehaviour
             {
                 _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, trials[trials.Count - 1].ThisTarget, nextAGTargetData);
                 _tdata.Start = click;
+                _tdata.A = PointR.Distance((PointR)click, nextAGTargetData.posR);
+                _tdata.W = nextAGTargetData.w;
             }
             
         }
@@ -201,15 +223,9 @@ public class AGManager : MonoBehaviour
 
     private void DoError()
     {
+#if UNITY_EDITOR
         Debug.Log("Error!");
-    }
-
-    void LogTrial(AGTrialData tdata)
-    {
-        int index = trials.Count;
-        Debug.Log($"Trial {index}/{totalTrialCount}\n" +
-                  $"Start: {tdata.Start}, End: {tdata.End}, " +
-                  $"Error: {tdata.IsError}");
+#endif
     }
 
 }
