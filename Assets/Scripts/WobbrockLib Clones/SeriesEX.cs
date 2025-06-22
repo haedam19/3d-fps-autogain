@@ -272,6 +272,7 @@ public static class SeriesEx
 
     public static List<PointR> Derivative(List<TimePointR> twoDSeries)
     {
+        // x is time in milliseconds, y is speed in pixels per millisecond
         List<PointR> list = new List<PointR>(twoDSeries.Count);
         for (int i = 1; i < twoDSeries.Count; i++)
         {

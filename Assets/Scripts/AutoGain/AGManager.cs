@@ -201,6 +201,7 @@ public class AGManager : MonoBehaviour
             _tdata.End = click;
             _tdata.NormalizeTimes();
             trials.Add(_tdata);
+            // TODO: Update Gain
             uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
             if (_tdata.IsError)
                 DoError();

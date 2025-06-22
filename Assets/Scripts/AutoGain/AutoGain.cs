@@ -22,6 +22,8 @@ public class AutoGain
         }
     }
 
+
+    #region Gain Calculation
     /// <summary>
     /// 마우스 입력에 Gain Function을 적용하여 카메라 회전 크기를 계산합니다.
     /// </summary>
@@ -82,4 +84,39 @@ public class AutoGain
         double ratio = (x - x0) / (x1 - x0);
         return (y1 - y0) * ratio + y0;
     }
+    #endregion
+
+    #region Gain Adjustment
+
+    public void UpdateGainCurve(AGTrialData tdata)
+    {
+        // Gain Curve를 Trial Data에 따라 업데이트합니다.
+        // tdata는 Trial의 속도, 움직임 등을 포함하는 데이터 구조체입니다.
+        // 이 함수는 Trial Data를 분석하여 gainCurves를 조정합니다.
+
+        // 분석을 위해 Movement Profile 생성
+        AGMovementData.Profiles profile = tdata.Movement.CreateSmoothedProfiles();
+        if (profile.IsEmpty)
+            return;
+
+        List<AGSubMovement> submovements = SegmentIntoSubmovements(profile);
+    }
+
+    public List<AGSubMovement> SegmentIntoSubmovements(AGMovementData.Profiles profile)
+    {
+        List<AGSubMovement> submovements = new List<AGSubMovement>();
+
+        int[] maxima = SeriesEx.Maxima(profile.Velocity, 0, -1);
+        if (maxima.Length == 0)
+            return submovements;
+
+        int[] minima = SeriesEx.Minima(profile.Velocity, 0, -1);
+        // create a submovement for each peak in the smoothed velocity profile
+        for (int i = 0; i < maxima.Length; i++)
+        {
+            // dd
+        }
+        return submovements;
+    }
+    #endregion
 }
