@@ -202,6 +202,13 @@ public class AGManager : MonoBehaviour
             _tdata.NormalizeTimes();
             trials.Add(_tdata);
             // TODO: Update Gain
+            AGMovementData movementData = _tdata.Movement;
+            AGMovementData.Profiles profiles = movementData.CreateSmoothedProfiles();
+            foreach(PointR profile in profiles.Velocity)
+            {
+                Debug.Log(profile.Y);
+            }
+
             uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
             if (_tdata.IsError)
                 DoError();

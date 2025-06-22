@@ -13,6 +13,20 @@ public class AutoGain
     List<double> gainCurves = new List<double>(binCount);
     const double sensitivityInverseScaler = 100.0; // gain을 그대로 저장하면 자릿수가 너무 작아 100배 키워 저장. 사용시 1/100로 나눠서 사용.
 
+    // Thresholds
+    const double ANGULAR_THRESHOLD = Math.PI / 4.0;    // 45°
+    const double OVERSHOOT_RATIO_THRESHOLD = 0.5;             // 50%
+    const double INTERRUPT_RATIO_THRESHOLD = 0.5;             // 50%
+
+    double subAimPoint = 0.95; // 목표 거리 대비 실제 이동 비율
+
+    //Aim point estimation
+    double processNoise = 0.2;
+    double sensorNoise = 40.0;
+    double estimatedError = 1.0;
+    double kalmanGain = 1.0;
+    double filteredAimPoint = 0.95;
+
     public AutoGain(double initialGain)
     {
         for (int i = 0; i < binCount; i++)
@@ -94,29 +108,177 @@ public class AutoGain
         // tdata는 Trial의 속도, 움직임 등을 포함하는 데이터 구조체입니다.
         // 이 함수는 Trial Data를 분석하여 gainCurves를 조정합니다.
 
-        // 분석을 위해 Movement Profile 생성
+        // 1) 분석을 위해 Movement Profile 생성
         AGMovementData.Profiles profile = tdata.Movement.CreateSmoothedProfiles();
         if (profile.IsEmpty)
             return;
 
+        // 2) 서브무브먼트 분할
         List<AGSubMovement> submovements = SegmentIntoSubmovements(profile);
+        if (submovements.Count == 0) return;
+
+        // 3) 포지션 및 타겟 좌표 획득
+        List<TimePointR> positions = profile.Position;
+        PointR pTarget = tdata.ThisTarget.posR;
+
+        int normalCount = 0;
+
+        // 4) 서브무브먼트 분석
+        for (int i = 0; i < submovements.Count; i++)
+        {
+            // 구조체를 꺼내서 수정 후 다시 저장
+            AGSubMovement sub = submovements[i];
+
+            // 시작점/종료점
+            TimePointR pStartTP = profile.Position[sub.MinStartIndex];
+            TimePointR pEndTP = profile.Position[sub.MinEndIndex];
+
+            // 2D 벡터로 변환
+            Vector2 P_start = new Vector2((float)pStartTP.X, (float)pStartTP.Y);
+            Vector2 P_end = new Vector2((float)pEndTP.X, (float)pEndTP.Y);
+            Vector2 P_target = new Vector2((float)pTarget.X, (float)pTarget.Y);
+
+            // 거리 계산
+            double Dc = Vector2.Distance(P_start, P_end);
+
+            Vector2 DcDirection = (P_end - P_start).normalized;
+            Vector2 startToTarget = P_target - P_start;
+            double Dtarget = Vector2.Dot(DcDirection, startToTarget);
+            double overshootAmt = Math.Max(Dc - Dtarget, 0.0);
+
+            // 최대 각 편차 계산
+            Vector2 dirLine = startToTarget.normalized;
+            double maxAngle = 0.0;
+            for (int j = sub.MinStartIndex; j <= sub.MinEndIndex; j++)
+            {
+                TimePointR pt = positions[j];
+                Vector2 P_j = new Vector2((float)pt.X, (float)pt.Y);
+                Vector2 dirSeg = (P_j - P_start).normalized;
+                double dot = Vector2.Dot(dirLine, dirSeg);
+                double angle = Math.Acos(Mathf.Clamp((float)dot, -1f, 1f));
+                if (angle > maxAngle)
+                {
+                    maxAngle = angle;
+                }
+            }
+
+            // 분류 플래그 설정
+            bool unaimed = (maxAngle > ANGULAR_THRESHOLD)
+                         || (overshootAmt > OVERSHOOT_RATIO_THRESHOLD * Dtarget);
+            bool interrupted = (!unaimed)
+                            && (Dc < INTERRUPT_RATIO_THRESHOLD * Dtarget);
+
+            sub.IsUnaimed = unaimed;
+            sub.IsInterrupted = interrupted;
+
+            if (!unaimed && !interrupted)
+            {
+                normalCount++;
+                sub.IsNonBallistic = (normalCount > 2);
+            }
+            else
+            {
+                sub.IsNonBallistic = false;
+            }
+
+            sub.Dc = Dc;
+            sub.Dtarget = Dtarget;
+            double measured_P = (Dtarget != 0.0) ? Dc / Dtarget : 0.0;
+            sub.measured_p = measured_P;
+
+            // 수정된 구조체를 리스트에 다시 할당
+            submovements[i] = sub;
+        }
+
+        // 5) Gain Curve 업데이트 & AimPoint (p) 업데이트
+        bool[] updatedBin = new bool[binCount];
+        // 모든 submovements를 역순으로 순회하여, 
+        // 동일한 빈에 두 번 이상 업데이트 되지 않도록 처리
+        for (int i = submovements.Count - 1; i >= 0; i--)
+        {
+            // 구조체를 꺼내서 수정 후 다시 저장
+            AGSubMovement sub = submovements[i];
+
+            if (sub.IsUnaimed) continue;  // Unaimed: 건너뛰기
+
+            // longitudinal error 계산
+            bool isBallistic = !sub.IsNonBallistic && !sub.IsInterrupted;
+
+            double R = (isBallistic || sub.IsInterrupted)
+                       ? (subAimPoint * sub.Dtarget - sub.Dc)
+                       : (sub.Dtarget - sub.Dc);
+            
+            /*
+            foreach (int j in sub.SpeedBins) // precomputed speed-bin 리스트
+            {
+                if (!updatedBin[j])
+                {
+                    // Δg = C · R · Si[j] · Ii[j]
+                    double deltaG = C * R * sub.Si[j] * sub.Ii[j];
+                    gainCurves[j] += deltaG;
+                    updatedBin[j] = true;
+                }
+            }
+            */
+
+            if (!sub.IsUnaimed && !sub.IsInterrupted && !sub.IsNonBallistic)
+            {
+                updateAimPoint(sub.measured_p);
+            }
+
+            // 수정된 구조체를 리스트에 다시 할당
+            submovements[i] = sub;
+        }
+
     }
 
     public List<AGSubMovement> SegmentIntoSubmovements(AGMovementData.Profiles profile)
     {
-        List<AGSubMovement> submovements = new List<AGSubMovement>();
-
         int[] maxima = SeriesEx.Maxima(profile.Velocity, 0, -1);
+        List<AGSubMovement> submovements = new List<AGSubMovement>(maxima.Length);
         if (maxima.Length == 0)
             return submovements;
 
         int[] minima = SeriesEx.Minima(profile.Velocity, 0, -1);
-        // create a submovement for each peak in the smoothed velocity profile
-        for (int i = 0; i < maxima.Length; i++)
+
+        List<(int index, bool isMax)> extrema = new List<(int, bool)>();
+        foreach (var idx in minima) extrema.Add((idx, false));
+        foreach (var idx in maxima) extrema.Add((idx, true));
+        extrema.Sort((a, b) => a.index.CompareTo(b.index));
+
+        if (extrema.Count >= 1 && extrema[0].isMax)
+            extrema.Insert(0, (0, false));
+        if (extrema.Count >= 1 && extrema[extrema.Count - 1].isMax)
+            extrema.Add((profile.Velocity.Count - 1, false));
+
+        for (int i = 1; i < extrema.Count - 1; i++)
         {
-            // dd
+            var first = extrema[i];
+            var second = extrema[i + 1];
+            var third = extrema[i + 2];
+
+            if (first.isMax && !second.isMax && third.isMax)
+            {
+                // 극소 - 극대 - 극소 패턴
+                AGSubMovement submovement = new AGSubMovement
+                {
+                    MinStartIndex = first.index,
+                    MaxIndex = second.index,
+                    MinEndIndex = third.index
+                };
+                submovements.Add(submovement);
+            }
         }
         return submovements;
+    }
+
+    public void updateAimPoint(double instant_aim_point)
+    {
+        estimatedError = estimatedError + sensorNoise;
+        kalmanGain = processNoise / (processNoise + sensorNoise);
+        filteredAimPoint = filteredAimPoint + kalmanGain * (instant_aim_point - filteredAimPoint);
+        estimatedError = (1 - kalmanGain) * estimatedError;
+        subAimPoint = filteredAimPoint;
     }
     #endregion
 }
