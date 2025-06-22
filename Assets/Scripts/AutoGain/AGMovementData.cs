@@ -53,11 +53,13 @@ public class AGMovementData
     public struct Profiles
     {
         public static readonly Profiles Empty;
-        public bool IsEmpty { get { return Position == null && Velocity == null && Acceleration == null && Jerk == null; } }
+        public bool IsEmpty { get { return Position == null && Velocity == null && Acceleration == null && Jerk == null && RawVelocity == null; } }
         public List<TimePointR> Position;
         public List<PointR> Velocity;
         public List<PointR> Acceleration;
         public List<PointR> Jerk;
+
+        public List<PointR> RawVelocity; // X=time, Y=Speed
     }
 
     /// <summary>
@@ -78,7 +80,7 @@ public class AGMovementData
 
     private AGTrialData _owner;
     private List<TimePointR> _moves;
-
+    private List<TimePointR> _rawSpeeds; // X=unused, Y=speed, Time=timestamp
 
     #region Constants
     /// <summary>
@@ -121,6 +123,7 @@ public class AGMovementData
     public AGMovementData(AGTrialData owner)
     {
         _moves = new List<TimePointR>(128);
+        _rawSpeeds = new List<TimePointR>(128); // for storing raw speed
         _owner = owner;
     }
 
@@ -213,6 +216,14 @@ public class AGMovementData
         _moves.Add(pt);
     }
 
+    public void AddRawSpeed(TimePointR speedPt)
+    {
+        // AddMove와 같은 방식으로, 마지막 샘플과 타임스탬프가 같으면 교체
+        if (_rawSpeeds.Count > 0 && _rawSpeeds[_rawSpeeds.Count - 1].Time == speedPt.Time)
+            _rawSpeeds.RemoveAt(_rawSpeeds.Count - 1);
+        _rawSpeeds.Add(speedPt);
+    }
+
     public void ClearMoves()
     {
         _moves.Clear();
@@ -230,6 +241,9 @@ public class AGMovementData
     /// <returns>The velocity, acceleration, and jerk submovement profiles from the resampled movement.</returns>
     public Profiles CreateResampledProfiles()
     {
+        if(_moves.Count != _rawSpeeds.Count)
+            Debug.LogError("_move와 _rawSpeeds의 개수가 다릅니다. " + _moves.Count + " vs " + _rawSpeeds.Count);
+
         if (_moves.Count == 0)
             return Profiles.Empty;
 
@@ -239,6 +253,13 @@ public class AGMovementData
         resampled.Velocity = SeriesEx.Derivative(resampled.Position);
         resampled.Acceleration = SeriesEx.Derivative(resampled.Velocity);
         resampled.Jerk = SeriesEx.Derivative(resampled.Acceleration);
+
+        List<TimePointR> tp_rawSpeeds = SeriesEx.ResampleInTime(_rawSpeeds, Hertz);
+        resampled.RawVelocity = new List<PointR>(tp_rawSpeeds.Count);
+        foreach(TimePointR timePointR in tp_rawSpeeds)
+        {
+            resampled.RawVelocity.Add(new PointR(timePointR.Time, timePointR.Y));
+        }
 
         return resampled;
     }
@@ -310,6 +331,7 @@ public class AGMovementData
         smoothed.Velocity = SeriesEx.Filter(resampled.Velocity, Kernel);
         smoothed.Acceleration = SeriesEx.Filter(resampled.Acceleration, Kernel);
         smoothed.Jerk = SeriesEx.Filter(resampled.Jerk, Kernel);
+        smoothed.RawVelocity = SeriesEx.Filter(resampled.RawVelocity, Kernel);
 
         return smoothed;
     }

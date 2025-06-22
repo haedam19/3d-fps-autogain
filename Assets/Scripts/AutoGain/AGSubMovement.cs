@@ -15,9 +15,10 @@ public struct AGSubMovement
 
     // measurement values
     public double Dc;
+    public double Daim;
     public double Dtarget;
     public double measured_p;
 
     // Speed bin
-    public List<bool> speedbin;
+    public List<bool> Si;
 }

@@ -18,7 +18,7 @@ public class AGMouse : MonoBehaviour
     private float _d; // pixel per unit 딱 1일 때 기준 화면 가득 채우는 가상 평면까지의 거리
 
     // Fields for Update Method. 마우스 입력 데이터 처리에 사용.
-    private Vector2 _delta; // InputSystem을 통해 받은 delta 값
+    private Vector2 _mouseDelta; // InputSystem을 통해 받은 delta 값
     private Vector2 _gDelta; // Gain Function 처리 후 delta 값 
     private Vector2 _lastPos; // 이전 프레임 마우스 커서 위치
     private Vector2 _currentPos; // 잠정적인 마우스 커서 위치
@@ -62,7 +62,7 @@ public class AGMouse : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        _delta = Vector2.zero;
+        _mouseDelta = Vector2.zero;
         _lastPos = Vector2.zero;
         _currentPos = Vector2.zero;
         _isClicked = false;
@@ -80,7 +80,7 @@ public class AGMouse : MonoBehaviour
 
     void Update()
     {
-        _delta = Mouse.delta.ReadValue();
+        _mouseDelta = Mouse.delta.ReadValue();
         
         _lastTime = _curTime;
         _curTime = Timer.Time;
@@ -101,11 +101,11 @@ public class AGMouse : MonoBehaviour
 
         double deltaYaw, deltaPitch;
         if (useAutoGain)
-            AGManager.AG.getTranslatedValue(_delta.x, _delta.y, deltaTime, out deltaYaw, out deltaPitch);
+            AGManager.AG.getTranslatedValue(_mouseDelta.x, _mouseDelta.y, deltaTime, out deltaYaw, out deltaPitch);
         else
         {
-            deltaYaw = _delta.x * ConstSensitivity;// * (float)deltaTime / 1000f;
-            deltaPitch = -_delta.y * ConstSensitivity;// * (float)deltaTime / 1000f;
+            deltaYaw = _mouseDelta.x * ConstSensitivity;// * (float)deltaTime / 1000f;
+            deltaPitch = -_mouseDelta.y * ConstSensitivity;// * (float)deltaTime / 1000f;
         }
         
 
@@ -128,8 +128,8 @@ public class AGMouse : MonoBehaviour
 
         if (!recordingMode) return;
 
-        if (_delta.sqrMagnitude > 0)
-            AGManager.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, _curTime));
+        if (_mouseDelta.sqrMagnitude > 0)
+            AGManager.Instance.MouseMove(new MouseMove(_mouseDelta, _lastPos, _currentPos, _curTime), deltaTime);
         if (_isClicked)
             AGManager.Instance.MouseClick(_currentPos, _curTime);
     }

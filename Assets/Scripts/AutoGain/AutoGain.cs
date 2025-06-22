@@ -7,11 +7,12 @@ using static Unity.Burst.Intrinsics.X86.Avx;
 public class AutoGain
 {
     // Constants
-    // 마우스 정확도 향상 Off, 배율 1 기준 0~20000 counts/s 정도 크기
+    // 마우스 정확도 향상 Off, 배율 1 기준 0~4000 counts/s 정도 크기
     const int binCount = 128; // how many bins are there
-    const double binSize = 160f; // 속도 구간 크기(count / s)
+    const double binSize = 32f; // 속도 구간 크기(count / s)
     List<double> gainCurves = new List<double>(binCount);
     const double sensitivityInverseScaler = 100.0; // gain을 그대로 저장하면 자릿수가 너무 작아 100배 키워 저장. 사용시 1/100로 나눠서 사용.
+    const double C = 0.0005;
 
     // Thresholds
     const double ANGULAR_THRESHOLD = Math.PI / 4.0;    // 45°
@@ -186,6 +187,20 @@ public class AutoGain
             double measured_P = (Dtarget != 0.0) ? Dc / Dtarget : 0.0;
             sub.measured_p = measured_P;
 
+            // SpeedBins 계산
+            sub.Si = new List<bool>(new bool[binCount]);
+
+            for (int t = sub.MinStartIndex; t <= sub.MinEndIndex; t++)
+            {
+                double v = profile.RawVelocity[t].Y;           // pixel/s
+                int bin = (int)(v / binSize);               // 0-based index
+                if (bin < 0) bin = 0;
+                if (bin >= binCount) bin = binCount - 1;
+
+                // 3) 해당 bin 이 사용되었음을 표시
+                sub.Si[bin] = true;
+            }
+
             // 수정된 구조체를 리스트에 다시 할당
             submovements[i] = sub;
         }
@@ -204,27 +219,28 @@ public class AutoGain
             // longitudinal error 계산
             bool isBallistic = !sub.IsNonBallistic && !sub.IsInterrupted;
 
-            double R = (isBallistic || sub.IsInterrupted)
-                       ? (subAimPoint * sub.Dtarget - sub.Dc)
-                       : (sub.Dtarget - sub.Dc);
-            
-            /*
-            foreach (int j in sub.SpeedBins) // precomputed speed-bin 리스트
-            {
-                if (!updatedBin[j])
-                {
-                    // Δg = C · R · Si[j] · Ii[j]
-                    double deltaG = C * R * sub.Si[j] * sub.Ii[j];
-                    gainCurves[j] += deltaG;
-                    updatedBin[j] = true;
-                }
-            }
-            */
-
+            // Note: Aim-point 업데이트 시점
             if (!sub.IsUnaimed && !sub.IsInterrupted && !sub.IsNonBallistic)
             {
                 updateAimPoint(sub.measured_p);
             }
+
+            sub.Daim = (isBallistic || sub.IsInterrupted) ? subAimPoint * sub.Dtarget : sub.Dtarget;
+
+            double R = sub.Daim - sub.Dc;
+
+            for (int j = 0; j < binCount; j++) // Note: 내부 for문 변수 오타 수정 완료
+            {
+                if (sub.Si[j] && !updatedBin[j])
+                {
+                    updatedBin[j] = true; // 해당 bin 업데이트 완료 표시
+                    double gainDelta = C * R;
+                    gainCurves[j] += gainDelta; // Gain Curve 업데이트
+                }
+            }
+
+
+            
 
             // 수정된 구조체를 리스트에 다시 할당
             submovements[i] = sub;
@@ -234,12 +250,12 @@ public class AutoGain
 
     public List<AGSubMovement> SegmentIntoSubmovements(AGMovementData.Profiles profile)
     {
-        int[] maxima = SeriesEx.Maxima(profile.Velocity, 0, -1);
+        int[] maxima = SeriesEx.Maxima(profile.RawVelocity, 0, -1);
         List<AGSubMovement> submovements = new List<AGSubMovement>(maxima.Length);
         if (maxima.Length == 0)
             return submovements;
 
-        int[] minima = SeriesEx.Minima(profile.Velocity, 0, -1);
+        int[] minima = SeriesEx.Minima(profile.RawVelocity, 0, -1);
 
         List<(int index, bool isMax)> extrema = new List<(int, bool)>();
         foreach (var idx in minima) extrema.Add((idx, false));
@@ -249,7 +265,7 @@ public class AutoGain
         if (extrema.Count >= 1 && extrema[0].isMax)
             extrema.Insert(0, (0, false));
         if (extrema.Count >= 1 && extrema[extrema.Count - 1].isMax)
-            extrema.Add((profile.Velocity.Count - 1, false));
+            extrema.Add((profile.RawVelocity.Count - 1, false));
 
         for (int i = 1; i < extrema.Count - 1; i++)
         {
