@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Enumeration;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -37,16 +36,21 @@ public class AGManager : MonoBehaviour
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
     [SerializeField] AGMouse agMouse;
+    [SerializeField] AGCurveViewer agCurveViewer;
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
 
     [SerializeField] int practiceTrialCount = 10; // 연습 Trial의 수 (시작 Trial 포함)
-    [SerializeField] int totalTrialCount = 30; // 총 Trial의 수
+    [SerializeField] int totalTrialCount = 300; // 총 Trial의 수
 
     List<AGTrialData> trials;
     AGTrialData _tdata;
 
+    float maxRawSpeed = 0f;
+    float minRawSpeed = float.MaxValue;
+
     private string gameLogfilePath; // 게임 실행 관련 로그 기록 경로
+
     private void Awake()
     {
         if (instance != null && instance != this)
@@ -79,7 +83,7 @@ public class AGManager : MonoBehaviour
 
         if (gainMode == GainMode.AUTOGAIN)
         {
-            autoGain = new AutoGain(10.0);
+            autoGain = new AutoGain(3.0);
             agMouse.useAutoGain = true;
         }
         else
@@ -110,12 +114,17 @@ public class AGManager : MonoBehaviour
 
     public void FinishTest()
     {
+        currentState = GameState.Exit;
+        agMouse.enabled = false;
         string filename = AGCSVExporter.GetTimestampedFilename();
         string path = Path.Combine(gameLogfilePath, filename);
         try
         {
             AGCSVExporter.ExportTrialsToCSV(trials, path);
+            if(currentGainMode == GainMode.AUTOGAIN)
+                AG.ExportGainLogs(Path.Combine(gameLogfilePath, "gain_log.csv"));
             Debug.Log("CSV export success: " + path);
+            uiManager.ShowEndMsgBox();
         }
         catch (System.Exception ex)
         {
@@ -140,7 +149,7 @@ public class AGManager : MonoBehaviour
     /// AGMouse로부터 마우스 이동 이벤트를 받아 처리합니다.
     /// </summary>
     /// <param name="move"></param>
-    public void MouseMove(MouseMove move)
+    public void MouseMove(MouseMove move, long deltaTimeMs)
     {
         if (currentState != GameState.Standby && currentState != GameState.InTest)
             return;
@@ -150,7 +159,11 @@ public class AGManager : MonoBehaviour
         PointR curPos = (PointR)unityScreenCoordCurrentMove;
 
         if (_tdata != null && !_tdata.IsStartTrial && (currentState == GameState.Standby || currentState == GameState.InTest))
+        {
             _tdata?.Movement.AddMove(new TimePointR(curPos, move.timeStamp));
+            _tdata?.Movement.AddRawSpeed(new TimePointR(0.0, (double)move.gDelta.magnitude / (deltaTimeMs / 1000.0), move.timeStamp));
+        }
+            
     }
 
     /// <summary>
@@ -201,7 +214,13 @@ public class AGManager : MonoBehaviour
             _tdata.End = click;
             _tdata.NormalizeTimes();
             trials.Add(_tdata);
+            
             uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
+            if(currentGainMode == GainMode.AUTOGAIN)
+            {
+                AG.UpdateGainCurve(_tdata);
+                agCurveViewer.UpdateCurveView();
+            }
             if (_tdata.IsError)
                 DoError();
 

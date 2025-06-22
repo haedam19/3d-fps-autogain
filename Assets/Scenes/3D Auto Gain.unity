@@ -186,8 +186,9 @@ MonoBehaviour:
   targetGenerator: {fileID: 105993113}
   uiManager: {fileID: 55267410}
   agMouse: {fileID: 2073934691}
-  practiceTrialCount: 5
-  totalTrialCount: 30
+  agCurveViewer: {fileID: 1338850844}
+  practiceTrialCount: 10
+  totalTrialCount: 240
 --- !u!114 &55267410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -752,6 +753,51 @@ MonoBehaviour:
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
+--- !u!1 &1338850843
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1338850845}
+  - component: {fileID: 1338850844}
+  m_Layer: 0
+  m_Name: GainCurveView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1338850844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1338850843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576715c64da4b3642a954aac872c529f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  curves: []
+--- !u!4 &1338850845
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1338850843}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 310, y: 1050, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1357992375
 GameObject:
   m_ObjectHideFlags: 0
@@ -1241,7 +1287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recordingMode: 1
   useAutoGain: 1
-  constSensitivity: 0.25
+  sensitivity: 10
 --- !u!1001 &3885226699822569657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1320,6 +1366,7 @@ SceneRoots:
   - {fileID: 2028992646}
   - {fileID: 1323039688}
   - {fileID: 55267407}
+  - {fileID: 1338850845}
   - {fileID: 105993114}
   - {fileID: 677931221}
   - {fileID: 417243923}

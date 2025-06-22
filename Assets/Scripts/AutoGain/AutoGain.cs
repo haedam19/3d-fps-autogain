@@ -1,35 +1,80 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class AutoGain
 {
     // Constants
-    // ¸¶¿ì½º Á¤È®µµ Çâ»ó Off, ¹èÀ² 1 ±âÁØ 0~20000 counts/s Á¤µµ Å©±â
-    const int binCount = 128; // how many bins are there
-    const double binSize = 160f; // ¼Óµµ ±¸°£ Å©±â(count / s)
+    // ë§ˆìš°ìŠ¤ ì •í™•ë„ í–¥ìƒ Off, ë°°ìœ¨ 1 ê¸°ì¤€ 0~3000 counts/s ì •ë„ í¬ê¸°
+    const int binCount = 64; // how many bins are there
+    const double binSize = 48f; // ì†ë„ êµ¬ê°„ í¬ê¸°(count / s)
     List<double> gainCurves = new List<double>(binCount);
-    const double sensitivityInverseScaler = 100.0; // gainÀ» ±×´ë·Î ÀúÀåÇÏ¸é ÀÚ¸´¼ö°¡ ³Ê¹« ÀÛ¾Æ 100¹è Å°¿ö ÀúÀå. »ç¿ë½Ã 1/100·Î ³ª´²¼­ »ç¿ë.
+    const double sensitivityInverseScaler = 100.0; // gainì„ ê·¸ëŒ€ë¡œ ì €ì¥í•˜ë©´ ìë¦¿ìˆ˜ê°€ ë„ˆë¬´ ì‘ì•„ 100ë°° í‚¤ì›Œ ì €ì¥. ì‚¬ìš©ì‹œ 1/100ë¡œ ë‚˜ëˆ ì„œ ì‚¬ìš©.
+    const double C = 0.0055;
+
+    // Thresholds
+    const double ANGULAR_THRESHOLD = Math.PI / 4.0;    // 45Â°
+    const double OVERSHOOT_RATIO_THRESHOLD = 0.5;             // 50%
+    const double INTERRUPT_RATIO_THRESHOLD = 0.5;             // 50%
+
+    double subAimPoint = 0.95; // ëª©í‘œ ê±°ë¦¬ ëŒ€ë¹„ ì‹¤ì œ ì´ë™ ë¹„ìœ¨
+
+    //Aim point estimation
+    double processNoise = 0.2;
+    double sensorNoise = 40.0;
+    double estimatedError = 1.0;
+    double kalmanGain = 1.0;
+    double filteredAimPoint = 0.95;
+
+    #region Log Fields
+    // ë¡œê·¸ ì£¼ê¸° ì„¤ì •
+    private const int RecordInterval = 10;
+    private int _updateCount = 0;
+
+    // ê¸°ê°„ë³„ ëˆ„ì  ì¹´ìš´í„°
+    private int _periodSubmovements = 0;
+    private int _periodOvershoot = 0;
+    private int _periodUndershoot = 0;
+
+    // ë¡œê·¸ ì €ì¥ìš© ë¦¬ìŠ¤íŠ¸
+    private List<GainLogEntry> _gainLogs = new List<GainLogEntry>();
+
+    // ë¡œê·¸ í•­ëª© êµ¬ì¡°ì²´
+    private struct GainLogEntry
+    {
+        public int UpdateCount;
+        public double[] GainCurve;
+        public double SubAimPoint;
+        public int SubmovementCount;
+        public int OvershootCount;
+        public int UndershootCount;
+    }
+    #endregion
 
     public AutoGain(double initialGain)
     {
         for (int i = 0; i < binCount; i++)
         {
-            // Gain Function ÃÊ±âÈ­: ÃÊ±â Gain °ªÀ¸·Î ¸ğµç bin¿¡ µ¿ÀÏÇÑ Gain Àû¿ë
+            // Gain Function ì´ˆê¸°í™”: ì´ˆê¸° Gain ê°’ìœ¼ë¡œ ëª¨ë“  binì— ë™ì¼í•œ Gain ì ìš©
             gainCurves.Add(initialGain);
         }
     }
 
+
+    #region Gain Calculation
     /// <summary>
-    /// ¸¶¿ì½º ÀÔ·Â¿¡ Gain FunctionÀ» Àû¿ëÇÏ¿© Ä«¸Ş¶ó È¸Àü Å©±â¸¦ °è»êÇÕ´Ï´Ù.
+    /// ë§ˆìš°ìŠ¤ ì…ë ¥ì— Gain Functionì„ ì ìš©í•˜ì—¬ ì¹´ë©”ë¼ íšŒì „ í¬ê¸°ë¥¼ ê³„ì‚°í•©ë‹ˆë‹¤.
     /// </summary>
     /// <param name="dx"> mouse delta x </param>
     /// <param name="dy"> mouse delta y </param>
     /// <param name="timespan"> time delta </param>
-    /// <param name="dYaw"> ÁÂ¿ì È¸Àü(yÃà È¸Àü) delta </param>
-    /// <param name="dPitch"> »óÇÏ È¸Àü(xÃà È¸Àü) delta </param>
+    /// <param name="dYaw"> ì¢Œìš° íšŒì „(yì¶• íšŒì „) delta </param>
+    /// <param name="dPitch"> ìƒí•˜ íšŒì „(xì¶• íšŒì „) delta </param>
     /// <returns></returns>
     public bool getTranslatedValue(double dx, double dy, double timespan, out double dYaw, out double dPitch)
     {
@@ -48,9 +93,9 @@ public class AutoGain
 
     public static double getInterpolatedValue(double index, List<double> list)
     {
-        // ÀÔ·Â ÀÎµ¦½º°¡ ¼Ò¼öÁ¡À» Æ÷ÇÔÇÒ ¼ö ÀÖÀ¸¸ç [0, list.Count - 1] ¹üÀ§¸¦ ³Ñ¾î°¥ ¼ö ÀÖÀ½.
-        // ¹üÀ§¸¦ ³Ñ¾î°¡¸é ÃÖ¼Ò/ÃÖ´ñ°ªÀ¸·Î Clamp
-        // ³ª¸ÓÁö °æ¿ì´Â ¼Ò¼öÁ¡ ÀÌÇÏ °ª Ã³¸®¸¦ À§ÇØ ¼±Çü º¸°£ ½Ç½Ã
+        // ì…ë ¥ ì¸ë±ìŠ¤ê°€ ì†Œìˆ˜ì ì„ í¬í•¨í•  ìˆ˜ ìˆìœ¼ë©° [0, list.Count - 1] ë²”ìœ„ë¥¼ ë„˜ì–´ê°ˆ ìˆ˜ ìˆìŒ.
+        // ë²”ìœ„ë¥¼ ë„˜ì–´ê°€ë©´ ìµœì†Œ/ìµœëŒ“ê°’ìœ¼ë¡œ Clamp
+        // ë‚˜ë¨¸ì§€ ê²½ìš°ëŠ” ì†Œìˆ˜ì  ì´í•˜ ê°’ ì²˜ë¦¬ë¥¼ ìœ„í•´ ì„ í˜• ë³´ê°„ ì‹¤ì‹œ
 
         int lowerIndex = (int)Math.Floor(index);
         int upperIndex = (int)Math.Ceiling(index);
@@ -66,14 +111,14 @@ public class AutoGain
     }
 
     /// <summary>
-    /// (x0, y0), (x1, y1) »çÀÌÀÇ ¼±Çü º¸°£À» ¼öÇàÇÕ´Ï´Ù.
+    /// (x0, y0), (x1, y1) ì‚¬ì´ì˜ ì„ í˜• ë³´ê°„ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
-    /// <param name="x"> ÀÔ·Â°ª </param>
-    /// <param name="x0"> ¼±Çüº¸°£ ½ÃÀÛÁ¡ x°ª </param>
-    /// <param name="x1"> ¼±Çüº¸°£ ³¡Á¡ x°ª </param>
-    /// <param name="y0"> ¼±Çüº¸°£ ½ÃÀÛÁ¡ y°ª </param>
-    /// <param name="y1"> ¼±Çüº¸°£ ³¡Á¡ y°ª </param>
-    /// <returns> ÀÔ·Â°ªÀÌ xÀÏ ¶§ÀÇ y °ª </returns>
+    /// <param name="x"> ì…ë ¥ê°’ </param>
+    /// <param name="x0"> ì„ í˜•ë³´ê°„ ì‹œì‘ì  xê°’ </param>
+    /// <param name="x1"> ì„ í˜•ë³´ê°„ ëì  xê°’ </param>
+    /// <param name="y0"> ì„ í˜•ë³´ê°„ ì‹œì‘ì  yê°’ </param>
+    /// <param name="y1"> ì„ í˜•ë³´ê°„ ëì  yê°’ </param>
+    /// <returns> ì…ë ¥ê°’ì´ xì¼ ë•Œì˜ y ê°’ </returns>
     public static double linearMap(double x, double x0, double x1, double y0, double y1)
     {
         if ((x1 - x0) == 0)
@@ -82,4 +127,289 @@ public class AutoGain
         double ratio = (x - x0) / (x1 - x0);
         return (y1 - y0) * ratio + y0;
     }
+    #endregion
+
+    #region Gain Adjustment
+
+    public void UpdateGainCurve(AGTrialData tdata)
+    {
+        // Gain Curveë¥¼ Trial Dataì— ë”°ë¼ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
+        // tdataëŠ” Trialì˜ ì†ë„, ì›€ì§ì„ ë“±ì„ í¬í•¨í•˜ëŠ” ë°ì´í„° êµ¬ì¡°ì²´ì…ë‹ˆë‹¤.
+        // ì´ í•¨ìˆ˜ëŠ” Trial Dataë¥¼ ë¶„ì„í•˜ì—¬ gainCurvesë¥¼ ì¡°ì •í•©ë‹ˆë‹¤.
+
+        // 1) ë¶„ì„ì„ ìœ„í•´ Movement Profile ìƒì„±
+        AGMovementData.Profiles profile = tdata.Movement.CreateSmoothedProfiles();
+        if (profile.IsEmpty)
+            return;
+
+
+        // 2) ì„œë¸Œë¬´ë¸Œë¨¼íŠ¸ ë¶„í• 
+        List<AGSubMovement> submovements = SegmentIntoSubmovements(profile);
+        if (submovements.Count == 0) return;
+
+
+        // 3) í¬ì§€ì…˜ ë° íƒ€ê²Ÿ ì¢Œí‘œ íšë“
+        List<TimePointR> positions = profile.Position;
+        PointR pTarget = tdata.ThisTarget.posR;
+
+        int normalCount = 0;
+
+        // 4) ì„œë¸Œë¬´ë¸Œë¨¼íŠ¸ ë¶„ì„
+        for (int i = 0; i < submovements.Count; i++)
+        {
+            // êµ¬ì¡°ì²´ë¥¼ êº¼ë‚´ì„œ ìˆ˜ì • í›„ ë‹¤ì‹œ ì €ì¥
+            AGSubMovement sub = submovements[i];
+
+            // ì‹œì‘ì /ì¢…ë£Œì 
+            TimePointR pStartTP = profile.Position[sub.MinStartIndex];
+            TimePointR pEndTP = profile.Position[sub.MinEndIndex];
+
+            // 2D ë²¡í„°ë¡œ ë³€í™˜
+            Vector2 P_start = new Vector2((float)pStartTP.X, (float)pStartTP.Y);
+            Vector2 P_end = new Vector2((float)pEndTP.X, (float)pEndTP.Y);
+            Vector2 P_target = new Vector2((float)pTarget.X, (float)pTarget.Y);
+
+            // ê±°ë¦¬ ê³„ì‚°
+            double Dc = Vector2.Distance(P_start, P_end);
+
+            Vector2 DcDirection = (P_end - P_start).normalized;
+            Vector2 startToTarget = P_target - P_start;
+            double Dtarget = Vector2.Dot(DcDirection, startToTarget);
+            double overshootAmt = Math.Max(Dc - Dtarget, 0.0);
+
+            // ìµœëŒ€ ê° í¸ì°¨ ê³„ì‚°
+            Vector2 dirLine = startToTarget.normalized;
+            double maxAngle = 0.0;
+            for (int j = sub.MinStartIndex; j <= sub.MinEndIndex; j++)
+            {
+                TimePointR pt = positions[j];
+                Vector2 P_j = new Vector2((float)pt.X, (float)pt.Y);
+                Vector2 dirSeg = (P_j - P_start).normalized;
+                if(dirSeg == Vector2.zero)
+                {
+                    Debug.LogWarning($"Zero vector encountered at index {j}. Skipping angle calculation.");
+                    continue; // Skip zero vectors to avoid NaN in angle calculation
+                }
+                double dot = Vector2.Dot(dirLine, dirSeg);
+                double angle = Math.Acos(Mathf.Clamp((float)dot, -1f, 1f));
+                if (angle > maxAngle)
+                {
+                    maxAngle = angle;
+                }
+            }
+
+            //Debug.Log($"maxAngle: {(float)maxAngle * Mathf.Rad2Deg:F3}, overshhotAmount: {overshootAmt:F2}, Dtarget:{Dtarget:F2}");
+
+            // ë¶„ë¥˜ í”Œë˜ê·¸ ì„¤ì •
+            bool unaimed = (maxAngle > ANGULAR_THRESHOLD)
+                         || (overshootAmt > OVERSHOOT_RATIO_THRESHOLD * Dtarget);
+            bool interrupted = (!unaimed)
+                            && (Dc < INTERRUPT_RATIO_THRESHOLD * Dtarget);
+
+            sub.IsUnaimed = unaimed;
+            sub.IsInterrupted = interrupted;
+
+            if (!unaimed && !interrupted)
+            {
+                normalCount++;
+                sub.IsNonBallistic = (normalCount > 2);
+            }
+            else
+            {
+                sub.IsNonBallistic = false;
+            }
+            
+            sub.Dc = Dc;
+            sub.Dtarget = Dtarget;
+            double measured_P = (Dtarget != 0.0) ? Dc / Dtarget : 0.0;
+            sub.measured_p = measured_P;
+
+            // SpeedBins ê³„ì‚°
+            sub.Si = new List<bool>(new bool[binCount]);
+
+            for (int t = sub.MinStartIndex; t <= sub.MinEndIndex; t++)
+            {
+                double v = profile.RawVelocity[t].Y;           // pixel/s
+                int bin = (int)(v / binSize);               // 0-based index
+                if (bin < 0) bin = 0;
+                if (bin >= binCount) bin = binCount - 1;
+
+                // 3) í•´ë‹¹ bin ì´ ì‚¬ìš©ë˜ì—ˆìŒì„ í‘œì‹œ
+                sub.Si[bin] = true;
+            }
+
+            // ìˆ˜ì •ëœ êµ¬ì¡°ì²´ë¥¼ ë¦¬ìŠ¤íŠ¸ì— ë‹¤ì‹œ í• ë‹¹
+            submovements[i] = sub;
+        }
+
+
+        // 5) Gain Curve ì—…ë°ì´íŠ¸ & AimPoint (p) ì—…ë°ì´íŠ¸
+        bool[] updatedBin = new bool[binCount];
+        // ëª¨ë“  submovementsë¥¼ ì—­ìˆœìœ¼ë¡œ ìˆœíšŒí•˜ì—¬, 
+        // ë™ì¼í•œ ë¹ˆì— ë‘ ë²ˆ ì´ìƒ ì—…ë°ì´íŠ¸ ë˜ì§€ ì•Šë„ë¡ ì²˜ë¦¬
+        for (int i = submovements.Count - 1; i >= 0; i--)
+        {
+            // êµ¬ì¡°ì²´ë¥¼ êº¼ë‚´ì„œ ìˆ˜ì • í›„ ë‹¤ì‹œ ì €ì¥
+            AGSubMovement sub = submovements[i];
+
+            if (sub.IsUnaimed) continue;  // Unaimed: ê±´ë„ˆë›°ê¸°
+
+            // longitudinal error ê³„ì‚°
+            bool isBallistic = !sub.IsNonBallistic && !sub.IsInterrupted;
+
+            // Note: Aim-point ì—…ë°ì´íŠ¸ ì‹œì 
+            if (!sub.IsUnaimed && !sub.IsInterrupted && !sub.IsNonBallistic)
+            {
+                updateAimPoint(sub.measured_p);
+            }
+
+            sub.Daim = (isBallistic || sub.IsInterrupted) ? subAimPoint * sub.Dtarget : sub.Dtarget;
+
+            double R = sub.Daim - sub.Dc;
+
+            if (R < 0) _periodOvershoot++;
+            else if (R > 0) _periodUndershoot++;
+
+            for (int j = 0; j < binCount; j++) // Note: ë‚´ë¶€ forë¬¸ ë³€ìˆ˜ ì˜¤íƒ€ ìˆ˜ì • ì™„ë£Œ
+            {
+                if (sub.Si[j] && !updatedBin[j])
+                {
+                    updatedBin[j] = true; // í•´ë‹¹ bin ì—…ë°ì´íŠ¸ ì™„ë£Œ í‘œì‹œ
+                    double gainDelta = C * R;
+                    gainCurves[j] += gainDelta; // Gain Curve ì—…ë°ì´íŠ¸
+                    gainCurves[j] = Math.Max(gainCurves[j], 0.1); // Gainì€ 0.1ë³´ë‹¤ ì‘ì•„ì§ˆ ìˆ˜ ì—†ìŒ
+                }
+            }
+
+            // ìˆ˜ì •ëœ êµ¬ì¡°ì²´ë¥¼ ë¦¬ìŠ¤íŠ¸ì— ë‹¤ì‹œ í• ë‹¹
+            submovements[i] = sub;
+        }
+
+
+        // 6) ë¡œê·¸ ê¸°ë¡
+        _periodSubmovements += submovements.Count;
+        _updateCount++;
+        // _periodOvershoot, _periodUndershootëŠ” Gain Curve ì—…ë°ì´íŠ¸ ì‹œ ì´ë¯¸ ì—…ë°ì´íŠ¸ë¨
+        if (_updateCount % RecordInterval == 0)
+        {
+            GainLogEntry entry = new GainLogEntry
+            {
+                UpdateCount = _updateCount,
+                GainCurve = gainCurves.ToArray(),
+                SubAimPoint = subAimPoint,
+                SubmovementCount = _periodSubmovements,
+                OvershootCount = _periodOvershoot,
+                UndershootCount = _periodUndershoot
+            };
+            _gainLogs.Add(entry);
+
+            _periodSubmovements = 0;
+            _periodOvershoot = 0;
+            _periodUndershoot = 0;
+        }
+
+    }
+
+    public List<AGSubMovement> SegmentIntoSubmovements(AGMovementData.Profiles profile)
+    {
+        int[] maxima = SeriesEx.Maxima(profile.RawVelocity, 0, -1);
+        List<AGSubMovement> submovements = new List<AGSubMovement>(maxima.Length);
+        if (maxima.Length == 0)
+            return submovements;
+
+        int[] minima = SeriesEx.Minima(profile.RawVelocity, 0, -1);
+        List<(int index, bool isMax)> extrema = new List<(int, bool)>();
+        foreach (var idx in minima) extrema.Add((idx, false));
+        foreach (var idx in maxima) extrema.Add((idx, true));
+        extrema.Sort((a, b) => a.index.CompareTo(b.index));
+
+        if (extrema.Count >= 1 && extrema[0].isMax)
+        {
+            extrema.Insert(0, (0, false));
+        }
+        if (extrema.Count >= 1 && extrema[extrema.Count - 1].isMax)
+        {
+            extrema.Add((profile.RawVelocity.Count - 1, false));
+        }
+
+        string extremaStr = string.Join(", ", extrema.ConvertAll(e => $"({e.index}, {e.isMax})"));
+
+
+        for (int i = 1; i < extrema.Count - 1; i++)
+        {
+            var first = extrema[i - 1 ];
+            var second = extrema[i];
+            var third = extrema[i + 1];
+
+            if (!first.isMax && second.isMax && !third.isMax)
+            {
+                // ê·¹ì†Œ - ê·¹ëŒ€ - ê·¹ì†Œ íŒ¨í„´
+                AGSubMovement submovement = new AGSubMovement
+                {
+                    MinStartIndex = first.index,
+                    MaxIndex = second.index,
+                    MinEndIndex = third.index
+                };
+                submovements.Add(submovement);
+            }
+        }
+
+        return submovements;
+    }
+
+    public void updateAimPoint(double instant_aim_point)
+    {
+        estimatedError = estimatedError + sensorNoise;
+        kalmanGain = processNoise / (processNoise + sensorNoise);
+        filteredAimPoint = filteredAimPoint + kalmanGain * (instant_aim_point - filteredAimPoint);
+        estimatedError = (1 - kalmanGain) * estimatedError;
+        subAimPoint = filteredAimPoint;
+    }
+    #endregion
+
+    public List<double> GetGainCurve()
+    {
+        // Gain Curveë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        // Gain CurveëŠ” í˜„ì¬ ì ìš©ëœ Gain ê°’ë“¤ì˜ ë¦¬ìŠ¤íŠ¸ì…ë‹ˆë‹¤.
+        return new List<double>(gainCurves);
+    }
+
+    public void ExportGainLogs(string filePath = "gain_log.csv")
+    {
+        if (_gainLogs.Count == 0)
+            return;
+
+        int binCount = _gainLogs[0].GainCurve.Length;
+        var sb = new StringBuilder();
+
+        // 1) í—¤ë”: UpdateCountë¥¼ ì²« ì—´ë¡œ
+        var headers = new List<string>
+        {
+            "UpdateCount",
+            "SubAimPoint",
+            "OverShoot",
+            "UnderShoot"
+        };
+        headers.AddRange(Enumerable.Range(0, binCount)
+                                   .Select(i => $"bin{i}"));
+        sb.AppendLine(string.Join(",", headers));
+
+        // 2) ê° ë¡œê·¸ ì—”íŠ¸ë¦¬
+        foreach (var e in _gainLogs)
+        {
+            var fields = new List<string>
+        {
+            e.UpdateCount.ToString(),
+            e.SubAimPoint.ToString("F4"),
+            e.OvershootCount.ToString(),
+            e.UndershootCount.ToString()
+        };
+            fields.AddRange(e.GainCurve.Select(g => g.ToString("F6")));
+            sb.AppendLine(string.Join(",", fields));
+        }
+
+        // 3) íŒŒì¼ ì“°ê¸°
+        File.WriteAllText(filePath, sb.ToString());
+    }
+
 }
