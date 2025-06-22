@@ -9,8 +9,8 @@ public static class AGCSVExporter
         using (StreamWriter writer = new StreamWriter(filePath))
         {
             // 헤더 작성
-            writer.WriteLine("index,isPractice,startX,startY,startTime,endX,endY,endTime," +
-                             "targetX,targetY,radius,w,Ae,Dx,ID,Axis,Overshoot,IsError");
+            writer.WriteLine("index,isPractice,startX,startY,endX,endY,duration," +
+                             "targetX,targetY,radius,w,Ae,Dx,ID,Axis,Angle,Overshoot,IsError");
 
             for (int i = 0; i < trials.Count; i++)
             {
@@ -22,12 +22,13 @@ public static class AGCSVExporter
                 // Start
                 double startX = trial.Start.X;
                 double startY = trial.Start.Y;
-                long startTime = trial.Start.Time;
 
                 // End
                 double endX = trial.End.X;
                 double endY = trial.End.Y;
-                long endTime = trial.End.Time;
+
+                // duration
+                long duration = trial.Movement.Duration;
 
                 // Target posR
                 double targetX = trial.ThisTarget.posR.X;
@@ -40,14 +41,15 @@ public static class AGCSVExporter
                 double dx = trial.GetDx(true);
                 double id = trial.ID;
                 double axis = trial.Axis;
+                double angle = trial.Angle;
                 int overshoot = trial.TargetOvershoots;
                 string isError = trial.IsError.ToString().ToLower();
 
                 // CSV 한 줄 작성
-                string line = $"{i},{isPractice},{startX:F1},{startY:F1},{startTime}," +
-                              $"{endX:F1},{endY:F1},{endTime}," +
+                string line = $"{i},{isPractice},{startX:F1},{startY:F1}," +
+                              $"{endX:F1},{endY:F1},{duration}," +
                               $"{targetX:F1},{targetY:F1},{radius:F3},{w:F3},{ae:F3},{dx:F3}," +
-                              $"{id:F3},{axis:F3},{overshoot},{isError}";
+                              $"{id:F3},{axis:F3},{angle:F3},{overshoot},{isError}";
 
                 writer.WriteLine(line);
             }

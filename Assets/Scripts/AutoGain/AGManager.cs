@@ -142,11 +142,15 @@ public class AGManager : MonoBehaviour
     /// <param name="move"></param>
     public void MouseMove(MouseMove move)
     {
+        if (currentState != GameState.Standby && currentState != GameState.InTest)
+            return;
+
         Vector2 unityCoordCurrentMove = move.currentPos;
         Vector2 unityScreenCoordCurrentMove = unityCoordCurrentMove + new Vector2(Screen.width / 2, Screen.height / 2);
         PointR curPos = (PointR)unityScreenCoordCurrentMove;
 
-
+        if (_tdata != null && !_tdata.IsStartTrial && (currentState == GameState.Standby || currentState == GameState.InTest))
+            _tdata?.Movement.AddMove(new TimePointR(curPos, move.timeStamp));
     }
 
     /// <summary>
