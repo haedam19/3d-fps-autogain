@@ -4,23 +4,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Unity.Burst.Intrinsics.X86.Avx;
 
-public class AutoGain : MonoBehaviour
+public class AutoGain
 {
     // Constants
+    // 마우스 정확도 향상 Off, 배율 1 기준 0~20000 counts/s 정도 크기
     const int binCount = 128; // how many bins are there
-    const double binSize = 0.005; // 속도 구간 크기
+    const double binSize = 160f; // 속도 구간 크기(count / s)
     List<double> gainCurves = new List<double>(binCount);
+    const double sensitivityInverseScaler = 100.0; // gain을 그대로 저장하면 자릿수가 너무 작아 100배 키워 저장. 사용시 1/100로 나눠서 사용.
 
-    // Start is called before the first frame update
-    void Start()
+    public AutoGain(double initialGain)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        for (int i = 0; i < binCount; i++)
+        {
+            // Gain Function 초기화: 초기 Gain 값으로 모든 bin에 동일한 Gain 적용
+            gainCurves.Add(initialGain);
+        }
     }
 
     /// <summary>
@@ -41,14 +40,18 @@ public class AutoGain : MonoBehaviour
         // CDgain = ppi / cpi;
         double gain = getInterpolatedValue(speed / binSize, gainCurves);
 
-        dYaw = dx * gain;
-        dPitch = -dy * gain;
+        dYaw = dx * gain / sensitivityInverseScaler;
+        dPitch = -dy * gain / sensitivityInverseScaler;
 
         return true;
     }
 
     public static double getInterpolatedValue(double index, List<double> list)
     {
+        // 입력 인덱스가 소수점을 포함할 수 있으며 [0, list.Count - 1] 범위를 넘어갈 수 있음.
+        // 범위를 넘어가면 최소/최댓값으로 Clamp
+        // 나머지 경우는 소수점 이하 값 처리를 위해 선형 보간 실시
+
         int lowerIndex = (int)Math.Floor(index);
         int upperIndex = (int)Math.Ceiling(index);
 

@@ -1,3 +1,4 @@
+using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -25,10 +26,19 @@ public class AGMouse : MonoBehaviour
 
     private float pitch = 0f; // 피치(X축 회전)
     private float yaw = 0f; // 요(Y축 회전)
-    public float sensitivity = 10f; // 마우스 감도 (회전)
+    private const float sensitivityInverseScaler = 100f; // constSensitivity로 실제 sensitivity를 산출하기 위한 역스케일링 값
+    [Range(1, 50), Tooltip("정수 단위로 스케일링된 감도입니다. 실제 감도는 표시된 감도의 1/100입니다.")]
+    public int sensitivity = 10; // 정수 단위로 스케일 업 된 sensitivity 값임.
+    public float ConstSensitivity { get { return (float)sensitivity / sensitivityInverseScaler; } } // 마우스 감도 (회전)
 
     private long _curTime;
     private long _lastTime;
+
+    int inputCount = 0; // 입력 횟수 카운트 (디버깅용)
+    float maxSpeed = 0f; // 최대 속도 (디버깅용)
+    float minSpeed = float.MaxValue; // 최소 속도 (디버깅용)
+    float averageSpeed = 0f;
+
 
     #region Initialization and Reset Methods
     private void Awake()
@@ -71,18 +81,31 @@ public class AGMouse : MonoBehaviour
     void Update()
     {
         _delta = Mouse.delta.ReadValue();
-
+        
         _lastTime = _curTime;
         _curTime = Timer.Time;
         long deltaTime = _curTime - _lastTime;
+
+        /*
+        float inputSpeed = _delta.magnitude / (deltaTime / 1000f);
+        if (inputSpeed > 0f)
+        {
+            inputCount++;
+            maxSpeed = Mathf.Max(maxSpeed, inputSpeed);
+            minSpeed = Mathf.Min(minSpeed, inputSpeed);
+            averageSpeed = (averageSpeed * (inputCount - 1) + inputSpeed) / inputCount;
+            Debug.Log($"Current Speed: {inputSpeed}, Max Speed: {maxSpeed:F2}, Min Speed: {minSpeed:F2}, Average Speed: {averageSpeed:F2}");
+        }
+        */
+        
 
         double deltaYaw, deltaPitch;
         if (useAutoGain)
             AGManager.AG.getTranslatedValue(_delta.x, _delta.y, deltaTime, out deltaYaw, out deltaPitch);
         else
         {
-            deltaYaw = _delta.x * sensitivity * (float)deltaTime / 1000f;
-            deltaPitch = -_delta.y * sensitivity * (float)deltaTime / 1000f;
+            deltaYaw = _delta.x * ConstSensitivity;// * (float)deltaTime / 1000f;
+            deltaPitch = -_delta.y * ConstSensitivity;// * (float)deltaTime / 1000f;
         }
         
 

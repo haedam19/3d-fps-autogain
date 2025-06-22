@@ -79,7 +79,7 @@ public class AGManager : MonoBehaviour
 
         if (gainMode == GainMode.AUTOGAIN)
         {
-            autoGain = new AutoGain();
+            autoGain = new AutoGain(10.0);
             agMouse.useAutoGain = true;
         }
         else
