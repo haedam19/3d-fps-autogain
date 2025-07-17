@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class AutoGain
 {
     // Constants
-    // 마우스 정확도 향상 Off, 배율 1 기준 0~4000 counts/s 정도 크기
-    const int binCount = 128; // how many bins are there
-    const double binSize = 32f; // 속도 구간 크기(count / s)
+    // 마우스 정확도 향상 Off, 배율 1 기준 0~3000 counts/s 정도 크기
+    const int binCount = 64; // how many bins are there
+    const double binSize = 48f; // 속도 구간 크기(count / s)
     List<double> gainCurves = new List<double>(binCount);
     const double sensitivityInverseScaler = 100.0; // gain을 그대로 저장하면 자릿수가 너무 작아 100배 키워 저장. 사용시 1/100로 나눠서 사용.
-    const double C = 0.0005;
+    const double C = 0.0055;
 
     // Thresholds
     const double ANGULAR_THRESHOLD = Math.PI / 4.0;    // 45°
@@ -44,6 +47,7 @@ public class AutoGain
     // 로그 항목 구조체
     private struct GainLogEntry
     {
+        public int UpdateCount;
         public double[] GainCurve;
         public double SubAimPoint;
         public int SubmovementCount;
@@ -150,7 +154,6 @@ public class AutoGain
 
         int normalCount = 0;
 
-
         // 4) 서브무브먼트 분석
         for (int i = 0; i < submovements.Count; i++)
         {
@@ -182,6 +185,11 @@ public class AutoGain
                 TimePointR pt = positions[j];
                 Vector2 P_j = new Vector2((float)pt.X, (float)pt.Y);
                 Vector2 dirSeg = (P_j - P_start).normalized;
+                if(dirSeg == Vector2.zero)
+                {
+                    Debug.LogWarning($"Zero vector encountered at index {j}. Skipping angle calculation.");
+                    continue; // Skip zero vectors to avoid NaN in angle calculation
+                }
                 double dot = Vector2.Dot(dirLine, dirSeg);
                 double angle = Math.Acos(Mathf.Clamp((float)dot, -1f, 1f));
                 if (angle > maxAngle)
@@ -189,6 +197,8 @@ public class AutoGain
                     maxAngle = angle;
                 }
             }
+
+            //Debug.Log($"maxAngle: {(float)maxAngle * Mathf.Rad2Deg:F3}, overshhotAmount: {overshootAmt:F2}, Dtarget:{Dtarget:F2}");
 
             // 분류 플래그 설정
             bool unaimed = (maxAngle > ANGULAR_THRESHOLD)
@@ -208,7 +218,7 @@ public class AutoGain
             {
                 sub.IsNonBallistic = false;
             }
-
+            
             sub.Dc = Dc;
             sub.Dtarget = Dtarget;
             double measured_P = (Dtarget != 0.0) ? Dc / Dtarget : 0.0;
@@ -267,6 +277,7 @@ public class AutoGain
                     updatedBin[j] = true; // 해당 bin 업데이트 완료 표시
                     double gainDelta = C * R;
                     gainCurves[j] += gainDelta; // Gain Curve 업데이트
+                    gainCurves[j] = Math.Max(gainCurves[j], 0.1); // Gain은 0.1보다 작아질 수 없음
                 }
             }
 
@@ -283,6 +294,7 @@ public class AutoGain
         {
             GainLogEntry entry = new GainLogEntry
             {
+                UpdateCount = _updateCount,
                 GainCurve = gainCurves.ToArray(),
                 SubAimPoint = subAimPoint,
                 SubmovementCount = _periodSubmovements,
@@ -306,24 +318,30 @@ public class AutoGain
             return submovements;
 
         int[] minima = SeriesEx.Minima(profile.RawVelocity, 0, -1);
-
         List<(int index, bool isMax)> extrema = new List<(int, bool)>();
         foreach (var idx in minima) extrema.Add((idx, false));
         foreach (var idx in maxima) extrema.Add((idx, true));
         extrema.Sort((a, b) => a.index.CompareTo(b.index));
 
         if (extrema.Count >= 1 && extrema[0].isMax)
+        {
             extrema.Insert(0, (0, false));
+        }
         if (extrema.Count >= 1 && extrema[extrema.Count - 1].isMax)
+        {
             extrema.Add((profile.RawVelocity.Count - 1, false));
+        }
+
+        string extremaStr = string.Join(", ", extrema.ConvertAll(e => $"({e.index}, {e.isMax})"));
+
 
         for (int i = 1; i < extrema.Count - 1; i++)
         {
-            var first = extrema[i];
-            var second = extrema[i + 1];
-            var third = extrema[i + 2];
+            var first = extrema[i - 1 ];
+            var second = extrema[i];
+            var third = extrema[i + 1];
 
-            if (first.isMax && !second.isMax && third.isMax)
+            if (!first.isMax && second.isMax && !third.isMax)
             {
                 // 극소 - 극대 - 극소 패턴
                 AGSubMovement submovement = new AGSubMovement
@@ -335,6 +353,7 @@ public class AutoGain
                 submovements.Add(submovement);
             }
         }
+
         return submovements;
     }
 
@@ -348,5 +367,49 @@ public class AutoGain
     }
     #endregion
 
+    public List<double> GetGainCurve()
+    {
+        // Gain Curve를 반환합니다.
+        // Gain Curve는 현재 적용된 Gain 값들의 리스트입니다.
+        return new List<double>(gainCurves);
+    }
+
+    public void ExportGainLogs(string filePath = "gain_log.csv")
+    {
+        if (_gainLogs.Count == 0)
+            return;
+
+        int binCount = _gainLogs[0].GainCurve.Length;
+        var sb = new StringBuilder();
+
+        // 1) 헤더: UpdateCount를 첫 열로
+        var headers = new List<string>
+        {
+            "UpdateCount",
+            "SubAimPoint",
+            "OverShoot",
+            "UnderShoot"
+        };
+        headers.AddRange(Enumerable.Range(0, binCount)
+                                   .Select(i => $"bin{i}"));
+        sb.AppendLine(string.Join(",", headers));
+
+        // 2) 각 로그 엔트리
+        foreach (var e in _gainLogs)
+        {
+            var fields = new List<string>
+        {
+            e.UpdateCount.ToString(),
+            e.SubAimPoint.ToString("F4"),
+            e.OvershootCount.ToString(),
+            e.UndershootCount.ToString()
+        };
+            fields.AddRange(e.GainCurve.Select(g => g.ToString("F6")));
+            sb.AppendLine(string.Join(",", fields));
+        }
+
+        // 3) 파일 쓰기
+        File.WriteAllText(filePath, sb.ToString());
+    }
 
 }

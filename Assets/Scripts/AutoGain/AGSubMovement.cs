@@ -21,4 +21,13 @@ public struct AGSubMovement
 
     // Speed bin
     public List<bool> Si;
+
+    public string ToString()
+    {
+        return $"IsUnaimed: {IsUnaimed}, IsInterrupted: {IsInterrupted}, IsNonBallistic: {IsNonBallistic}";
+
+        //return $"MinStartIndex: {MinStartIndex}, MaxIndex: {MaxIndex}, MinEndIndex: {MinEndIndex}, " +
+        //       $"IsUnaimed: {IsUnaimed}, IsInterrupted: {IsInterrupted}, IsNonBallistic: {IsNonBallistic}, " +
+        //       $"Dc: {Dc}, Daim: {Daim}, Dtarget: {Dtarget}, measured_p: {measured_p}";
+    }
 }

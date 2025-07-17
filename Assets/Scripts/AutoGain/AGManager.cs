@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Enumeration;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -37,11 +36,12 @@ public class AGManager : MonoBehaviour
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
     [SerializeField] AGMouse agMouse;
+    [SerializeField] AGCurveViewer agCurveViewer;
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
 
     [SerializeField] int practiceTrialCount = 10; // 연습 Trial의 수 (시작 Trial 포함)
-    [SerializeField] int totalTrialCount = 30; // 총 Trial의 수
+    [SerializeField] int totalTrialCount = 300; // 총 Trial의 수
 
     List<AGTrialData> trials;
     AGTrialData _tdata;
@@ -83,7 +83,7 @@ public class AGManager : MonoBehaviour
 
         if (gainMode == GainMode.AUTOGAIN)
         {
-            autoGain = new AutoGain(10.0);
+            autoGain = new AutoGain(3.0);
             agMouse.useAutoGain = true;
         }
         else
@@ -114,12 +114,17 @@ public class AGManager : MonoBehaviour
 
     public void FinishTest()
     {
+        currentState = GameState.Exit;
+        agMouse.enabled = false;
         string filename = AGCSVExporter.GetTimestampedFilename();
         string path = Path.Combine(gameLogfilePath, filename);
         try
         {
             AGCSVExporter.ExportTrialsToCSV(trials, path);
+            if(currentGainMode == GainMode.AUTOGAIN)
+                AG.ExportGainLogs(Path.Combine(gameLogfilePath, "gain_log.csv"));
             Debug.Log("CSV export success: " + path);
+            uiManager.ShowEndMsgBox();
         }
         catch (System.Exception ex)
         {
@@ -209,21 +214,13 @@ public class AGManager : MonoBehaviour
             _tdata.End = click;
             _tdata.NormalizeTimes();
             trials.Add(_tdata);
-            // TODO: Update Gain
             
-            //AGMovementData movementData = _tdata.Movement;
-            //AGMovementData.Profiles profiles = movementData.CreateSmoothedProfiles();
-            //foreach(PointR profile in profiles.RawVelocity)
-            //{
-            //    if ((float)profile.Y > maxRawSpeed)
-            //        maxRawSpeed = (float)profile.Y;
-            //    if ((float)profile.Y < minRawSpeed)
-            //        minRawSpeed = (float)profile.Y;
-            //    Debug.Log($"{profile.Y:F3}, Max: {maxRawSpeed:F3}, Min: {minRawSpeed:F3}");
-            //}
-            
-
             uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
+            if(currentGainMode == GainMode.AUTOGAIN)
+            {
+                AG.UpdateGainCurve(_tdata);
+                agCurveViewer.UpdateCurveView();
+            }
             if (_tdata.IsError)
                 DoError();
 
