@@ -73,3 +73,6 @@ crashlytics-build.properties
 
 # Log Files
 /[Aa]ssets/[Ll]og/*
+
+# Private references
+/_local_refs/
