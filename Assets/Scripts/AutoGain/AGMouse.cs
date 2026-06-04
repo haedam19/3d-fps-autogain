@@ -1,57 +1,57 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Unity Input SystemÀ» ÀÌ¿ëÇÑ 1ÀÎÄª Ä«¸Ş¶ó È¸Àü ½ºÅ©¸³Æ®ÀÔ´Ï´Ù.
-/// º°µµÀÇ ÇÃ·¹ÀÌ¾î ¹Ùµğ ¾øÀÌ Ä«¸Ş¶ó ÀÚÃ¼¸¦ »óÇÏÁÂ¿ì È¸Àü½ÃÅµ´Ï´Ù.
+/// Unity Input Systemì„ ì´ìš©í•œ 1ì¸ì¹­ ì¹´ë©”ë¼ íšŒì „ ìŠ¤í¬ë¦½íŠ¸ì…ë‹ˆë‹¤.
+/// ë³„ë„ì˜ í”Œë ˆì´ì–´ ë°”ë”” ì—†ì´ ì¹´ë©”ë¼ ìì²´ë¥¼ ìƒí•˜ì¢Œìš° íšŒì „ì‹œí‚µë‹ˆë‹¤.
 /// </summary>
 public class AGMouse : MonoBehaviour
 {
-    [Tooltip("½ÇÇèÀ» À§ÇØ ¸¶¿ì½º ±ËÀû ¹× ÀÔ·ÂÀ» ±â·ÏÇÕ´Ï´Ù.\n´ÜÀ§ Å×½ºÆ® Áß¿¡´Â false·Î ¼³Á¤ÇÏ¼¼¿ä.")]
+    [Tooltip("ì‹¤í—˜ì„ ìœ„í•´ ë§ˆìš°ìŠ¤ ê¶¤ì  ë° ì…ë ¥ì„ ê¸°ë¡í•©ë‹ˆë‹¤.\në‹¨ìœ„ í…ŒìŠ¤íŠ¸ ì¤‘ì—ëŠ” falseë¡œ ì„¤ì •í•˜ì„¸ìš”.")]
     public bool recordingMode = true;
-    [Tooltip("AutoGain »ç¿ë ¿©ºÎ¸¦ ¼³Á¤ÇÕ´Ï´Ù")]
+    [Tooltip("AutoGain ì‚¬ìš© ì—¬ë¶€ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤")]
     public bool useAutoGain = true;
 
 
     private Mouse Mouse { get { return Mouse.current; } }
-    private float _d; // pixel per unit µü 1ÀÏ ¶§ ±âÁØ È­¸é °¡µæ Ã¤¿ì´Â °¡»ó Æò¸é±îÁöÀÇ °Å¸®
+    private float _d; // pixel per unit ë”± 1ì¼ ë•Œ ê¸°ì¤€ í™”ë©´ ê°€ë“ ì±„ìš°ëŠ” ê°€ìƒ í‰ë©´ê¹Œì§€ì˜ ê±°ë¦¬
 
-    // Fields for Update Method. ¸¶¿ì½º ÀÔ·Â µ¥ÀÌÅÍ Ã³¸®¿¡ »ç¿ë.
-    private Vector2 _mouseDelta; // InputSystemÀ» ÅëÇØ ¹ŞÀº delta °ª
-    private Vector2 _gDelta; // Gain Function Ã³¸® ÈÄ delta °ª 
-    private Vector2 _lastPos; // ÀÌÀü ÇÁ·¹ÀÓ ¸¶¿ì½º Ä¿¼­ À§Ä¡
-    private Vector2 _currentPos; // ÀáÁ¤ÀûÀÎ ¸¶¿ì½º Ä¿¼­ À§Ä¡
+    // Fields for Update Method. ë§ˆìš°ìŠ¤ ì…ë ¥ ë°ì´í„° ì²˜ë¦¬ì— ì‚¬ìš©.
+    private Vector2 _mouseDelta; // InputSystemì„ í†µí•´ ë°›ì€ delta ê°’
+    private Vector2 _gDelta; // Gain Function ì²˜ë¦¬ í›„ delta ê°’ 
+    private Vector2 _lastPos; // ì´ì „ í”„ë ˆì„ ë§ˆìš°ìŠ¤ ì»¤ì„œ ìœ„ì¹˜
+    private Vector2 _currentPos; // ì ì •ì ì¸ ë§ˆìš°ìŠ¤ ì»¤ì„œ ìœ„ì¹˜
     private bool _isClicked;
 
-    private float pitch = 0f; // ÇÇÄ¡(XÃà È¸Àü)
-    private float yaw = 0f; // ¿ä(YÃà È¸Àü)
-    private const float sensitivityInverseScaler = 100f; // constSensitivity·Î ½ÇÁ¦ sensitivity¸¦ »êÃâÇÏ±â À§ÇÑ ¿ª½ºÄÉÀÏ¸µ °ª
-    [Range(1, 50), Tooltip("Á¤¼ö ´ÜÀ§·Î ½ºÄÉÀÏ¸µµÈ °¨µµÀÔ´Ï´Ù. ½ÇÁ¦ °¨µµ´Â Ç¥½ÃµÈ °¨µµÀÇ 1/100ÀÔ´Ï´Ù.")]
-    public int sensitivity = 10; // Á¤¼ö ´ÜÀ§·Î ½ºÄÉÀÏ ¾÷ µÈ sensitivity °ªÀÓ.
-    public float ConstSensitivity { get { return (float)sensitivity / sensitivityInverseScaler; } } // ¸¶¿ì½º °¨µµ (È¸Àü)
+    private float pitch = 0f; // í”¼ì¹˜(Xì¶• íšŒì „)
+    private float yaw = 0f; // ìš”(Yì¶• íšŒì „)
+    private const float sensitivityInverseScaler = 100f; // constSensitivityë¡œ ì‹¤ì œ sensitivityë¥¼ ì‚°ì¶œí•˜ê¸° ìœ„í•œ ì—­ìŠ¤ì¼€ì¼ë§ ê°’
+    [Range(1, 50), Tooltip("ì •ìˆ˜ ë‹¨ìœ„ë¡œ ìŠ¤ì¼€ì¼ë§ëœ ê°ë„ì…ë‹ˆë‹¤. ì‹¤ì œ ê°ë„ëŠ” í‘œì‹œëœ ê°ë„ì˜ 1/100ì…ë‹ˆë‹¤.")]
+    public int sensitivity = 10; // ì •ìˆ˜ ë‹¨ìœ„ë¡œ ìŠ¤ì¼€ì¼ ì—… ëœ sensitivity ê°’ì„.
+    public float ConstSensitivity { get { return (float)sensitivity / sensitivityInverseScaler; } } // ë§ˆìš°ìŠ¤ ê°ë„ (íšŒì „)
 
     private long _curTime;
     private long _lastTime;
 
-    int inputCount = 0; // ÀÔ·Â È½¼ö Ä«¿îÆ® (µğ¹ö±ë¿ë)
-    float maxSpeed = 0f; // ÃÖ´ë ¼Óµµ (µğ¹ö±ë¿ë)
-    float minSpeed = float.MaxValue; // ÃÖ¼Ò ¼Óµµ (µğ¹ö±ë¿ë)
+    int inputCount = 0; // ì…ë ¥ íšŸìˆ˜ ì¹´ìš´íŠ¸ (ë””ë²„ê¹…ìš©)
+    float maxSpeed = 0f; // ìµœëŒ€ ì†ë„ (ë””ë²„ê¹…ìš©)
+    float minSpeed = float.MaxValue; // ìµœì†Œ ì†ë„ (ë””ë²„ê¹…ìš©)
     float averageSpeed = 0f;
 
 
     #region Initialization and Reset Methods
     private void Awake()
     {
-        // ·¹ÄÚµù ¸ğµå ¾Æ´Ò ¶§ (´ÜÀ§ Å×½ºÆ® µî)
+        // ë ˆì½”ë”© ëª¨ë“œ ì•„ë‹ ë•Œ (ë‹¨ìœ„ í…ŒìŠ¤íŠ¸ ë“±)
         if (!recordingMode)
         {
-            Init(); // ÃÊ±âÈ­ÇØÁÙ °ÔÀÓ ¸Å´ÏÀú°¡ ¾øÀ» ¼ö ÀÖ¾î Á÷Á¢ ÃÊ±âÈ­
+            Init(); // ì´ˆê¸°í™”í•´ì¤„ ê²Œì„ ë§¤ë‹ˆì €ê°€ ì—†ì„ ìˆ˜ ìˆì–´ ì§ì ‘ ì´ˆê¸°í™”
         }
     }
 
     public void Init()
     {
-        // _d¸¸Å­ ¶³¾îÁø °Å¸®¿¡ width * height Å©±âÀÇ °¡»ó ½ºÅ©¸°ÀÌ ÀÖÀ¸¸é È­¸éÀ» Á¤È®È÷ Ã¤¿ò
+        // _dë§Œí¼ ë–¨ì–´ì§„ ê±°ë¦¬ì— width * height í¬ê¸°ì˜ ê°€ìƒ ìŠ¤í¬ë¦°ì´ ìˆìœ¼ë©´ í™”ë©´ì„ ì •í™•íˆ ì±„ì›€
         _d = Screen.height / (2 * Mathf.Tan(Camera.main.fieldOfView * Mathf.Deg2Rad / 2));
     }
 
@@ -108,14 +108,14 @@ public class AGMouse : MonoBehaviour
         }
         
 
-        // 1. Ä«¸Ş¶ó È¸Àü
+        // 1. ì¹´ë©”ë¼ íšŒì „
         yaw += (float)deltaYaw;
         pitch += (float)deltaPitch;
-        yaw = Mathf.Clamp(yaw, -60f, 60f); // ¿ä È¸Àü Á¦ÇÑ
+        yaw = Mathf.Clamp(yaw, -60f, 60f); // ìš” íšŒì „ ì œí•œ
         pitch = Mathf.Clamp(pitch, -60f, 60f);
         transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
 
-        // 2. Æò¸é ±³Â÷ °è»ê
+        // 2. í‰ë©´ êµì°¨ ê³„ì‚°
         Vector3 origin = transform.position;
         Vector3 dir = transform.forward;
         float t = (_d - origin.z) / dir.z;

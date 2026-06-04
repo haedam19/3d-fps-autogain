@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -34,7 +34,7 @@ public class AGTarget : MonoBehaviour
 {
     public AGTargetData data;
 
-    #region Properties (data ¾È ¾²°í ¹Ù·Î ÂüÁ¶)
+    #region Properties (data ì•ˆ ì“°ê³  ë°”ë¡œ ì°¸ì¡°)
     public Vector3 posWorld
     {
         get => data.posWorld;

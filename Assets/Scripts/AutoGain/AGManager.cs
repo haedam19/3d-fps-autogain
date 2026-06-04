@@ -1,4 +1,4 @@
-using MouseLog;
+ï»¿using MouseLog;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -28,10 +28,10 @@ public class AGManager : MonoBehaviour
     #endregion
 
     public enum GameState { Entrance, Standby, InTest, InterTest, Exit }
-    public GameState currentState = GameState.Entrance; // ÇöÀç °ÔÀÓ »óÅÂ
+    public GameState currentState = GameState.Entrance; // í˜„ì¬ ê²Œì„ ìƒíƒœ
 
     public enum GainMode { REFERENCE, AUTOGAIN };
-    public GainMode currentGainMode = GainMode.REFERENCE; // ÇöÀç Gain ¸ğµå
+    public GainMode currentGainMode = GainMode.REFERENCE; // í˜„ì¬ Gain ëª¨ë“œ
 
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
@@ -40,8 +40,8 @@ public class AGManager : MonoBehaviour
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
 
-    [SerializeField] int practiceTrialCount = 10; // ¿¬½À TrialÀÇ ¼ö (½ÃÀÛ Trial Æ÷ÇÔ)
-    [SerializeField] int totalTrialCount = 300; // ÃÑ TrialÀÇ ¼ö
+    [SerializeField] int practiceTrialCount = 10; // ì—°ìŠµ Trialì˜ ìˆ˜ (ì‹œì‘ Trial í¬í•¨)
+    [SerializeField] int totalTrialCount = 300; // ì´ Trialì˜ ìˆ˜
 
     List<AGTrialData> trials;
     AGTrialData _tdata;
@@ -49,7 +49,7 @@ public class AGManager : MonoBehaviour
     float maxRawSpeed = 0f;
     float minRawSpeed = float.MaxValue;
 
-    private string gameLogfilePath; // °ÔÀÓ ½ÇÇà °ü·Ã ·Î±× ±â·Ï °æ·Î
+    private string gameLogfilePath; // ê²Œì„ ì‹¤í–‰ ê´€ë ¨ ë¡œê·¸ ê¸°ë¡ ê²½ë¡œ
 
     private void Awake()
     {
@@ -75,7 +75,7 @@ public class AGManager : MonoBehaviour
         uiManager.ShowIndependentVariableSelectionUI();
     }
 
-    /// <summary> AGMouse °´Ã¼¸¦ »ı¼ºÇØ Gain ¸ğµå¸¦ ¼³Á¤ÇÏ°í ½ÇÇèÀ» ½ÃÀÛÇÕ´Ï´Ù. </summary>
+    /// <summary> AGMouse ê°ì²´ë¥¼ ìƒì„±í•´ Gain ëª¨ë“œë¥¼ ì„¤ì •í•˜ê³  ì‹¤í—˜ì„ ì‹œì‘í•©ë‹ˆë‹¤. </summary>
     public void SetGainMode(GainMode gainMode)
     {
         currentGainMode = gainMode;
@@ -146,7 +146,7 @@ public class AGManager : MonoBehaviour
     }
 
     /// <summary>
-    /// AGMouse·ÎºÎÅÍ ¸¶¿ì½º ÀÌµ¿ ÀÌº¥Æ®¸¦ ¹Ş¾Æ Ã³¸®ÇÕ´Ï´Ù.
+    /// AGMouseë¡œë¶€í„° ë§ˆìš°ìŠ¤ ì´ë™ ì´ë²¤íŠ¸ë¥¼ ë°›ì•„ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     /// <param name="move"></param>
     public void MouseMove(MouseMove move, long deltaTimeMs)
@@ -167,13 +167,13 @@ public class AGManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Å×½ºÆ® Áß ¹ß»ıÇÑ Å¬¸¯ ÀÌº¥Æ®¸¦ Ã³¸®ÇÕ´Ï´Ù.
+    /// í…ŒìŠ¤íŠ¸ ì¤‘ ë°œìƒí•œ í´ë¦­ ì´ë²¤íŠ¸ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     /// <param name="pos"></param>
     /// <param name="time"></param>
     public void MouseClick(Vector2 pos, long time)
     {
-        // ºí·Ï ½ÃÀÛÁöÁ¡ ¶Ç´Â ºí·Ï Áß°£¿¡ Å¬¸¯ÀÌ ¹ß»ıÇÑ °æ¿ì¿¡´Â Ã³¸® X
+        // ë¸”ë¡ ì‹œì‘ì§€ì  ë˜ëŠ” ë¸”ë¡ ì¤‘ê°„ì— í´ë¦­ì´ ë°œìƒí•œ ê²½ìš°ì—ëŠ” ì²˜ë¦¬ X
         if (currentState != GameState.Standby && currentState != GameState.InTest)
             return;
 
@@ -186,7 +186,7 @@ public class AGManager : MonoBehaviour
     void NextTrial(TimePointR click)
     {
 
-        if (currentState == GameState.Standby) // ½ÃÀÛ trialÀÎ °æ¿ì
+        if (currentState == GameState.Standby) // ì‹œì‘ trialì¸ ê²½ìš°
         {
             if (!_tdata.TargetContains((PointR)click)) // click missed start target
             {
@@ -198,7 +198,7 @@ public class AGManager : MonoBehaviour
 
                 AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
                 if (nextAGTargetData.IsEmpty())
-                    StopTest(true); // Å¸°Ù »ı¼º ½ÇÆĞ ½Ã Å×½ºÆ® Á¤Áö
+                    StopTest(true); // íƒ€ê²Ÿ ìƒì„± ì‹¤íŒ¨ ì‹œ í…ŒìŠ¤íŠ¸ ì •ì§€
                 else
                 {
                     _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, lastTrial.ThisTarget, nextAGTargetData);
@@ -224,7 +224,7 @@ public class AGManager : MonoBehaviour
             if (_tdata.IsError)
                 DoError();
 
-            if (trials.Count >= totalTrialCount) // ¸ğµç TrialÀÌ ³¡³­ °æ¿ì
+            if (trials.Count >= totalTrialCount) // ëª¨ë“  Trialì´ ëë‚œ ê²½ìš°
             {
                 FinishTest();
                 return;
@@ -232,7 +232,7 @@ public class AGManager : MonoBehaviour
 
             AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
             if (nextAGTargetData.IsEmpty())
-                StopTest(true); // Å¸°Ù »ı¼º ½ÇÆĞ ½Ã Å×½ºÆ® Á¤Áö
+                StopTest(true); // íƒ€ê²Ÿ ìƒì„± ì‹¤íŒ¨ ì‹œ í…ŒìŠ¤íŠ¸ ì •ì§€
             else
             {
                 _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, trials[trials.Count - 1].ThisTarget, nextAGTargetData);

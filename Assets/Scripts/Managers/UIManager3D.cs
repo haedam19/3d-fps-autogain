@@ -1,13 +1,13 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// ½ÇÇè µµÁß ¸Ş¼¼Áö ¹Ú½º¸¦ ¿­°í ´İ´Â µ¿ÀÛÀ» ´ã´çÇÕ´Ï´Ù. 
-/// ½ÇÇèÀ» ½ÃÀÛÇßÀ» ¶§, ÇÑ conditionÀÌ Á¾·áµÇ¾úÀ» ¶§, ½ÇÇèÀÌ Á¾·áµÇ¾úÀ» ¶§
-/// ¸Ş¼¼Áö¹Ú½º¿¡ ÇÊ¿äÇÑ ³»¿ëÀ» ´ã¾Æ Ãâ·ÂÇØÁİ´Ï´Ù.
+/// ì‹¤í—˜ ë„ì¤‘ ë©”ì„¸ì§€ ë°•ìŠ¤ë¥¼ ì—´ê³  ë‹«ëŠ” ë™ì‘ì„ ë‹´ë‹¹í•©ë‹ˆë‹¤. 
+/// ì‹¤í—˜ì„ ì‹œì‘í–ˆì„ ë•Œ, í•œ conditionì´ ì¢…ë£Œë˜ì—ˆì„ ë•Œ, ì‹¤í—˜ì´ ì¢…ë£Œë˜ì—ˆì„ ë•Œ
+/// ë©”ì„¸ì§€ë°•ìŠ¤ì— í•„ìš”í•œ ë‚´ìš©ì„ ë‹´ì•„ ì¶œë ¥í•´ì¤ë‹ˆë‹¤.
 /// </summary>
 public class UIManager3D : MonoBehaviour
 {
@@ -25,8 +25,8 @@ public class UIManager3D : MonoBehaviour
     }
     #endregion
 
-    private GameObject startMsgBox; // ÄÚµå·Î »ı¼º
-    private GameObject conditionEndMsgBox; // ¾À¿¡ ¸¸µé¾îµÎ°í ÀÎ½ºÆåÅÍ ÇÒ´ç
+    private GameObject startMsgBox; // ì½”ë“œë¡œ ìƒì„±
+    private GameObject conditionEndMsgBox; // ì”¬ì— ë§Œë“¤ì–´ë‘ê³  ì¸ìŠ¤í™í„° í• ë‹¹
 
     void Awake()
     {
@@ -43,14 +43,14 @@ public class UIManager3D : MonoBehaviour
 
     public void ShowSessionStartMsgBox(SessionConfiguration config)
     {
-        // ÀÌ¹Ì ¸Ş½ÃÁö ¹Ú½º°¡ ÀÖÀ¸¸é Áßº¹ »ı¼º ¹æÁö
+        // ì´ë¯¸ ë©”ì‹œì§€ ë°•ìŠ¤ê°€ ìˆìœ¼ë©´ ì¤‘ë³µ ìƒì„± ë°©ì§€
         if (startMsgBox != null)
         {
             startMsgBox.SetActive(true);
             return;
         }
 
-        // Canvas Ã£±â ¶Ç´Â »ı¼º
+        // Canvas ì°¾ê¸° ë˜ëŠ” ìƒì„±
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -61,15 +61,15 @@ public class UIManager3D : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // ¸Ş½ÃÁö ¹Ú½º ÆĞ³Î »ı¼º
+        // ë©”ì‹œì§€ ë°•ìŠ¤ íŒ¨ë„ ìƒì„±
         startMsgBox = new GameObject("StartMsgBox");
         startMsgBox.transform.SetParent(canvas.transform, false);
         RectTransform panelRect = startMsgBox.AddComponent<RectTransform>();
-        panelRect.sizeDelta = new Vector2(800, 600); // 2¹è·Î È®´ë
+        panelRect.sizeDelta = new Vector2(800, 600); // 2ë°°ë¡œ í™•ëŒ€
         Image panelImage = startMsgBox.AddComponent<Image>();
         panelImage.color = new Color(0, 0, 0, 0.95f);
 
-        // ÅØ½ºÆ® »ı¼º
+        // í…ìŠ¤íŠ¸ ìƒì„±
         GameObject textObj = new GameObject("MsgText");
         textObj.transform.SetParent(startMsgBox.transform, false);
         Text msgText = textObj.AddComponent<Text>();
@@ -77,10 +77,10 @@ public class UIManager3D : MonoBehaviour
         msgText.alignment = TextAnchor.UpperCenter;
         msgText.color = Color.white;
         msgText.fontSize = 32;
-        msgText.rectTransform.anchoredPosition = new Vector2(0, 90); // Y°ªµµ 2¹è
-        msgText.rectTransform.sizeDelta = new Vector2(760, 360); // 2¹è
+        msgText.rectTransform.anchoredPosition = new Vector2(0, 90); // Yê°’ë„ 2ë°°
+        msgText.rectTransform.sizeDelta = new Vector2(760, 360); // 2ë°°
 
-        // SessionConfiguration Á¤º¸ Ç¥½Ã
+        // SessionConfiguration ì •ë³´ í‘œì‹œ
         msgText.text =
             $"Ready to start the experiment!\n\n" +
             $"Subject ID: {config.subject}\n" +
@@ -90,17 +90,17 @@ public class UIManager3D : MonoBehaviour
             $"Number of Trials: {config.trials}\n" +
             $"Number of Practice Trials: {config.practice}\n";
 
-        // ½ÃÀÛ ¹öÆ° »ı¼º
+        // ì‹œì‘ ë²„íŠ¼ ìƒì„±
         GameObject buttonObj = new GameObject("StartButton");
         buttonObj.transform.SetParent(startMsgBox.transform, false);
         Button startButton = buttonObj.AddComponent<Button>();
         Image btnImage = buttonObj.AddComponent<Image>();
         btnImage.color = new Color(0.2f, 0.5f, 1f, 1f);
         RectTransform btnRect = buttonObj.GetComponent<RectTransform>();
-        btnRect.sizeDelta = new Vector2(320, 80); // 2¹è
-        btnRect.anchoredPosition = new Vector2(0, -200); // Y°ªµµ 2¹è
+        btnRect.sizeDelta = new Vector2(320, 80); // 2ë°°
+        btnRect.anchoredPosition = new Vector2(0, -200); // Yê°’ë„ 2ë°°
 
-        // ¹öÆ° ÅØ½ºÆ®
+        // ë²„íŠ¼ í…ìŠ¤íŠ¸
         GameObject btnTextObj = new GameObject("ButtonText");
         btnTextObj.transform.SetParent(buttonObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
@@ -111,7 +111,7 @@ public class UIManager3D : MonoBehaviour
         btnText.fontSize = 20;
         btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
 
-        // ¹öÆ° Å¬¸¯ ÀÌº¥Æ® µî·Ï
+        // ë²„íŠ¼ í´ë¦­ ì´ë²¤íŠ¸ ë“±ë¡
         startButton.onClick.AddListener(() =>
         {
             startMsgBox.SetActive(false);
@@ -121,11 +121,11 @@ public class UIManager3D : MonoBehaviour
 
     public void ShowConditionEndMsgBox(int completeConditions, int totalConditions)
     {
-        // ÀÌ¹Ì ¸Ş½ÃÁö ¹Ú½º°¡ ÀÖÀ¸¸é Áßº¹ »ı¼º ¹æÁö
+        // ì´ë¯¸ ë©”ì‹œì§€ ë°•ìŠ¤ê°€ ìˆìœ¼ë©´ ì¤‘ë³µ ìƒì„± ë°©ì§€
         if (conditionEndMsgBox != null)
         {
             conditionEndMsgBox.SetActive(true);
-            // ÅØ½ºÆ® °»½Å
+            // í…ìŠ¤íŠ¸ ê°±ì‹ 
             var msgText = conditionEndMsgBox.transform.Find("MsgText")?.GetComponent<Text>();
             if (msgText != null)
             {
@@ -134,7 +134,7 @@ public class UIManager3D : MonoBehaviour
             return;
         }
 
-        // Canvas Ã£±â ¶Ç´Â »ı¼º
+        // Canvas ì°¾ê¸° ë˜ëŠ” ìƒì„±
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -145,7 +145,7 @@ public class UIManager3D : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // ¸Ş½ÃÁö ¹Ú½º ÆĞ³Î »ı¼º
+        // ë©”ì‹œì§€ ë°•ìŠ¤ íŒ¨ë„ ìƒì„±
         conditionEndMsgBox = new GameObject("ConditionEndMsgBox");
         conditionEndMsgBox.transform.SetParent(canvas.transform, false);
         RectTransform panelRect = conditionEndMsgBox.AddComponent<RectTransform>();
@@ -153,7 +153,7 @@ public class UIManager3D : MonoBehaviour
         Image panelImage = conditionEndMsgBox.AddComponent<Image>();
         panelImage.color = new Color(0, 0, 0, 0.95f);
 
-        // ÅØ½ºÆ® »ı¼º
+        // í…ìŠ¤íŠ¸ ìƒì„±
         GameObject textObj = new GameObject("MsgText");
         textObj.transform.SetParent(conditionEndMsgBox.transform, false);
         Text msgTextComp = textObj.AddComponent<Text>();
@@ -165,7 +165,7 @@ public class UIManager3D : MonoBehaviour
         msgTextComp.rectTransform.sizeDelta = new Vector2(760, 360);
         msgTextComp.text = $"{completeConditions} of {totalConditions} conditions complete.\nPlease proceed to the next condition.";
 
-        // Next ¹öÆ° »ı¼º
+        // Next ë²„íŠ¼ ìƒì„±
         GameObject buttonObj = new GameObject("NextButton");
         buttonObj.transform.SetParent(conditionEndMsgBox.transform, false);
         Button nextButton = buttonObj.AddComponent<Button>();
@@ -175,7 +175,7 @@ public class UIManager3D : MonoBehaviour
         btnRect.sizeDelta = new Vector2(320, 80);
         btnRect.anchoredPosition = new Vector2(0, -200);
 
-        // ¹öÆ° ÅØ½ºÆ®
+        // ë²„íŠ¼ í…ìŠ¤íŠ¸
         GameObject btnTextObj = new GameObject("ButtonText");
         btnTextObj.transform.SetParent(buttonObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
@@ -186,7 +186,7 @@ public class UIManager3D : MonoBehaviour
         btnText.fontSize = 20;
         btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
 
-        // ¹öÆ° Å¬¸¯ ÀÌº¥Æ® µî·Ï
+        // ë²„íŠ¼ í´ë¦­ ì´ë²¤íŠ¸ ë“±ë¡
         nextButton.onClick.AddListener(() =>
         {
             conditionEndMsgBox.SetActive(false);
@@ -196,11 +196,11 @@ public class UIManager3D : MonoBehaviour
 
     public void ShowSessionEndMsgBox()
     {
-        // Áßº¹ ¹æÁö: ±âÁ¸ ¸Ş½ÃÁö ¹Ú½º Á¦°Å ¶Ç´Â ¼û±â±â
+        // ì¤‘ë³µ ë°©ì§€: ê¸°ì¡´ ë©”ì‹œì§€ ë°•ìŠ¤ ì œê±° ë˜ëŠ” ìˆ¨ê¸°ê¸°
         if (conditionEndMsgBox != null)
             conditionEndMsgBox.SetActive(false);
 
-        // Canvas Ã£±â ¶Ç´Â »ı¼º
+        // Canvas ì°¾ê¸° ë˜ëŠ” ìƒì„±
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -211,7 +211,7 @@ public class UIManager3D : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // ¸Ş½ÃÁö ¹Ú½º ÆĞ³Î »ı¼º
+        // ë©”ì‹œì§€ ë°•ìŠ¤ íŒ¨ë„ ìƒì„±
         GameObject sessionEndMsgBox = new GameObject("SessionEndMsgBox");
         sessionEndMsgBox.transform.SetParent(canvas.transform, false);
         RectTransform panelRect = sessionEndMsgBox.AddComponent<RectTransform>();
@@ -219,7 +219,7 @@ public class UIManager3D : MonoBehaviour
         Image panelImage = sessionEndMsgBox.AddComponent<Image>();
         panelImage.color = new Color(0, 0, 0, 0.95f);
 
-        // ÅØ½ºÆ® »ı¼º
+        // í…ìŠ¤íŠ¸ ìƒì„±
         GameObject textObj = new GameObject("MsgText");
         textObj.transform.SetParent(sessionEndMsgBox.transform, false);
         Text msgTextComp = textObj.AddComponent<Text>();
@@ -231,7 +231,7 @@ public class UIManager3D : MonoBehaviour
         msgTextComp.rectTransform.sizeDelta = new Vector2(760, 360);
         msgTextComp.text = "Thank you for participating in the experiment.\nThe program will now exit.";
 
-        // Á¾·á ¹öÆ° »ı¼º
+        // ì¢…ë£Œ ë²„íŠ¼ ìƒì„±
         GameObject buttonObj = new GameObject("CloseButton");
         buttonObj.transform.SetParent(sessionEndMsgBox.transform, false);
         Button closeButton = buttonObj.AddComponent<Button>();
@@ -241,7 +241,7 @@ public class UIManager3D : MonoBehaviour
         btnRect.sizeDelta = new Vector2(320, 80);
         btnRect.anchoredPosition = new Vector2(0, -200);
 
-        // ¹öÆ° ÅØ½ºÆ®
+        // ë²„íŠ¼ í…ìŠ¤íŠ¸
         GameObject btnTextObj = new GameObject("ButtonText");
         btnTextObj.transform.SetParent(buttonObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
@@ -252,7 +252,7 @@ public class UIManager3D : MonoBehaviour
         btnText.fontSize = 20;
         btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
 
-        // ¹öÆ° Å¬¸¯ ÀÌº¥Æ® µî·Ï
+        // ë²„íŠ¼ í´ë¦­ ì´ë²¤íŠ¸ ë“±ë¡
         closeButton.onClick.AddListener(() =>
         {
             sessionEndMsgBox.SetActive(false);

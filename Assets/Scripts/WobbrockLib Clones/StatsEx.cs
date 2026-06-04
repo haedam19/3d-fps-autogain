@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 
 public static class StatsEx
@@ -57,7 +57,7 @@ public static class StatsEx
     }
 
     /// <summary>
-    /// µÎ µ¥ÀÌÅÍ ÁıÇÕ x¿Í yÀÇ ¼±Çü È¸±Í ¸ğµ¨ÀÇ ±â¿ï±â °è»ê. (https://en.wikipedia.org/wiki/Simple_linear_regression)
+    /// ë‘ ë°ì´í„° ì§‘í•© xì™€ yì˜ ì„ í˜• íšŒê·€ ëª¨ë¸ì˜ ê¸°ìš¸ê¸° ê³„ì‚°. (https://en.wikipedia.org/wiki/Simple_linear_regression)
     /// </summary>
     public static double Slope(double[] x, double[] y)
     {
@@ -79,7 +79,7 @@ public static class StatsEx
     }
 
     /// <summary>
-    /// µÎ µ¥ÀÌÅÍ ÁıÇÕ x¿Í yÀÇ ¼±Çü È¸±Í ¸ğµ¨ÀÇ ÀıÆí °è»ê. (https://en.wikipedia.org/wiki/Simple_linear_regression)
+    /// ë‘ ë°ì´í„° ì§‘í•© xì™€ yì˜ ì„ í˜• íšŒê·€ ëª¨ë¸ì˜ ì ˆí¸ ê³„ì‚°. (https://en.wikipedia.org/wiki/Simple_linear_regression)
     /// </summary> 
     public static double Intercept(double[] x, double[] y)
     {
@@ -195,7 +195,7 @@ public static class StatsEx
         return num / (double)(d1.Length - 1);
     }
 
-    /// <summary> ÇÇ¾î½¼ »ó°ü°è¼ö °è»ê </summary>
+    /// <summary> í”¼ì–´ìŠ¨ ìƒê´€ê³„ìˆ˜ ê³„ì‚° </summary>
     public static double Pearson(double[] d1, double[] d2)
     {
         double num = Covariance(d1, d2);

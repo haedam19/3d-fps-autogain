@@ -1,27 +1,27 @@
-using MouseLog;
+ï»¿using MouseLog;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Target3D : MonoBehaviour
 {
-    // Target3D´Â ½ÇÇè¿¡¼­ »ç¿ëµÇ´Â Å¸°Ù ¿ÀºêÁ§Æ®¿¡ ºÎÂøµÇ´Â C# ÄÄÆ÷³ÍÆ®ÀÔ´Ï´Ù.
+    // Target3DëŠ” ì‹¤í—˜ì—ì„œ ì‚¬ìš©ë˜ëŠ” íƒ€ê²Ÿ ì˜¤ë¸Œì íŠ¸ì— ë¶€ì°©ë˜ëŠ” C# ì»´í¬ë„ŒíŠ¸ì…ë‹ˆë‹¤.
     //
-    // ½ÇÇè¿¡¼­ ConditionData°¡ »ı¼ºÀÚ¿¡ ÀÇÇØ ÃÊ±âÈ­µÉ ¶§ ÇØ´ç ConditionÀ» À§ÇÑ Å¸°Ù ¿ÀºêÁ§Æ®µéÀÌ »ı¼ºµÇ°í,
-    // °¢ TrialÀÌ ÀÚ½ÅÀ» À§ÇÑ Target3D ½ºÅ©¸³Æ®¸¦ ¸â¹öº¯¼ö¿¡ ÀúÀåÇØ ÂüÁ¶ÇÏ°Ô µË´Ï´Ù.
-    // (ÇÑ Target3D°¡ ¿©·¯ Trial¿¡ »ç¿ëµÉ ¼ö ÀÖ½À´Ï´Ù.)
+    // ì‹¤í—˜ì—ì„œ ConditionDataê°€ ìƒì„±ìì— ì˜í•´ ì´ˆê¸°í™”ë  ë•Œ í•´ë‹¹ Conditionì„ ìœ„í•œ íƒ€ê²Ÿ ì˜¤ë¸Œì íŠ¸ë“¤ì´ ìƒì„±ë˜ê³ ,
+    // ê° Trialì´ ìì‹ ì„ ìœ„í•œ Target3D ìŠ¤í¬ë¦½íŠ¸ë¥¼ ë©¤ë²„ë³€ìˆ˜ì— ì €ì¥í•´ ì°¸ì¡°í•˜ê²Œ ë©ë‹ˆë‹¤.
+    // (í•œ Target3Dê°€ ì—¬ëŸ¬ Trialì— ì‚¬ìš©ë  ìˆ˜ ìˆìŠµë‹ˆë‹¤.)
     //
-    // Å¸°ÙÀÌ »ı¼ºµÈ Á÷ÈÄ Target3DÀÇ TargetOff()¸¦ È£ÃâÇÏ¿© ºñÈ°¼ºÈ­µÇ¸ç,
-    // Å¸°Ù ¿ÀºêÁ§Æ®´Â ObjectPoolRootÀÇ ÀÚ½ÄÀ¸·Î ¹èÄ¡µÇ¾î ÇØ´ç Å¸°ÙÀÌ ½ÇÇè¿¡ ¾²ÀÌ´Â conditionÂ÷·Ê°¡ µÉ ¶§±îÁö
-    // ÇÃ·¹ÀÌ¾î¿¡°Ô º¸ÀÌÁö ¾Ê´Â °ø°£¿¡¼­ ´ë±âÇÕ´Ï´Ù.
+    // íƒ€ê²Ÿì´ ìƒì„±ëœ ì§í›„ Target3Dì˜ TargetOff()ë¥¼ í˜¸ì¶œí•˜ì—¬ ë¹„í™œì„±í™”ë˜ë©°,
+    // íƒ€ê²Ÿ ì˜¤ë¸Œì íŠ¸ëŠ” ObjectPoolRootì˜ ìì‹ìœ¼ë¡œ ë°°ì¹˜ë˜ì–´ í•´ë‹¹ íƒ€ê²Ÿì´ ì‹¤í—˜ì— ì“°ì´ëŠ” conditionì°¨ë¡€ê°€ ë  ë•Œê¹Œì§€
+    // í”Œë ˆì´ì–´ì—ê²Œ ë³´ì´ì§€ ì•ŠëŠ” ê³µê°„ì—ì„œ ëŒ€ê¸°í•©ë‹ˆë‹¤.
     // 
-    // Target3D´Â ÀÚ±â Â÷·Ê°¡ µÇ¾î ¼¼ÆÃµÉ ¶§
-    // RootÀÇ WorldPositionÀÌ (0, 0, distanceToCamera)ÀÌ¶ó´Â °¡Á¤ ÇÏ¿¡ positionÀÌ °áÁ¤µË´Ï´Ù.
-    // distanceToCamera´Â Ä«¸Ş¶óÀÇ FOV¿Í È­¸é Å©±â¿¡ µû¶ó °áÁ¤µË´Ï´Ù.
+    // Target3DëŠ” ìê¸° ì°¨ë¡€ê°€ ë˜ì–´ ì„¸íŒ…ë  ë•Œ
+    // Rootì˜ WorldPositionì´ (0, 0, distanceToCamera)ì´ë¼ëŠ” ê°€ì • í•˜ì— positionì´ ê²°ì •ë©ë‹ˆë‹¤.
+    // distanceToCameraëŠ” ì¹´ë©”ë¼ì˜ FOVì™€ í™”ë©´ í¬ê¸°ì— ë”°ë¼ ê²°ì •ë©ë‹ˆë‹¤.
 
     #region Fields
-    ConditionData _cdata = null; // ¼ÓÇÑ condition.
-    TrialData _tdata = null; // ÀÚ½ÅÀÌ Å¸°ÙÀÌ µÇ´Â trial. ¸î ¹øÂ° trialÀÇ Å¸°ÙÀÎÁö È®ÀÎÇÏ´Â µ¥¿¡ »ç¿ë. 
+    ConditionData _cdata = null; // ì†í•œ condition.
+    TrialData _tdata = null; // ìì‹ ì´ íƒ€ê²Ÿì´ ë˜ëŠ” trial. ëª‡ ë²ˆì§¸ trialì˜ íƒ€ê²Ÿì¸ì§€ í™•ì¸í•˜ëŠ” ë°ì— ì‚¬ìš©. 
 
     [SerializeField] Material m_onMaterial;
     [SerializeField] Material m_offMaterial;
@@ -29,8 +29,8 @@ public class Target3D : MonoBehaviour
     SphereCollider m_collider;
 
     float radius;
-    Vector2 posUnityScreen; // ÁÂÇÏ´Ü ¿øÁ¡ ÁÂÇ¥°è ±âÁØ À§Ä¡
-    PointR posDisplay;  // ÁÂ»ó´Ü ¿øÁ¡ ÁÂÇ¥°è ±âÁØ À§Ä¡
+    Vector2 posUnityScreen; // ì¢Œí•˜ë‹¨ ì›ì  ì¢Œí‘œê³„ ê¸°ì¤€ ìœ„ì¹˜
+    PointR posDisplay;  // ì¢Œìƒë‹¨ ì›ì  ì¢Œí‘œê³„ ê¸°ì¤€ ìœ„ì¹˜
     #endregion
 
     #region Properties: Radius, Center

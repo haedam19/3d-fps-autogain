@@ -44,3 +44,4 @@ Use Korean by default when communicating with the user. However, it is acceptabl
 
 - This project is an undergraduate thesis project. Its goal is to apply existing research and produce an original project outcome based on it.
 - The `_local_refs` directory contains research papers and related software source code that the user referenced while developing this project. Reviewing these materials together with the Unity project source code will help you understand the project.
+- Do not edit any files in `_local_refs`.

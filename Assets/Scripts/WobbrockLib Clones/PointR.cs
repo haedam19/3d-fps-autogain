@@ -1,4 +1,4 @@
-/* 
+ï»¿/* 
  * Cloned from WobbrockLib.dll
  * C# .NET 2.0 library of application-agnostic formulae, widgets, data structures, and algorithms
  * 
@@ -10,8 +10,8 @@
  *		wobbrock@uw.edu
  */
 /// <summary>
-/// <para> 2Â÷¿ø x, yÁÂÇ¥¸¦ double·Î ÀúÀåÇÕ´Ï´Ù. </para>
-/// <para> ÁÂÇ¥ Ç¥Çö¿¡ ¾²ÀÏ ¶§´Â lefttopÀ» ¿øÁ¡À¸·Î Ãë±ŞÇÕ´Ï´Ù. </para>
+/// <para> 2ì°¨ì› x, yì¢Œí‘œë¥¼ doubleë¡œ ì €ì¥í•©ë‹ˆë‹¤. </para>
+/// <para> ì¢Œí‘œ í‘œí˜„ì— ì“°ì¼ ë•ŒëŠ” lefttopì„ ì›ì ìœ¼ë¡œ ì·¨ê¸‰í•©ë‹ˆë‹¤. </para>
 /// </summary>
 using System;
 using UnityEngine;
@@ -94,7 +94,7 @@ public struct PointR
     }
 
     /// <summary>
-    /// start -> end »çÀÌÀÇ °¢µµ¸¦ ±¸ÇÕ´Ï´Ù.
+    /// start -> end ì‚¬ì´ì˜ ê°ë„ë¥¼ êµ¬í•©ë‹ˆë‹¤.
     /// </summary>
     /// <returns> angle in radians (double) </returns>
     public static double Angle(PointR start, PointR end, bool positiveOnly)
@@ -122,7 +122,7 @@ public struct PointR
     }
 
     /// <summary>
-    /// p¸¦ c¸¦ Áß½ÉÀ¸·Î radians ¸¸Å­ È¸Àü½ÃÅ² Á¡(PointR)À» ¹İÈ¯ÇÕ´Ï´Ù.
+    /// pë¥¼ cë¥¼ ì¤‘ì‹¬ìœ¼ë¡œ radians ë§Œí¼ íšŒì „ì‹œí‚¨ ì (PointR)ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public static PointR RotatePoint(PointR p, PointR c, double radians)
     {
@@ -132,7 +132,7 @@ public struct PointR
         return empty;
     }
 
-    /// <summary> Á¡µéÀÇ ¹«°ÔÁß½ÉÀ» ±¸ÇÕ´Ï´Ù. </summary>
+    /// <summary> ì ë“¤ì˜ ë¬´ê²Œì¤‘ì‹¬ì„ êµ¬í•©ë‹ˆë‹¤. </summary>
     public static PointR Centroid(List<PointR> points)
     {
         double num = 0.0;
@@ -147,7 +147,7 @@ public struct PointR
     }
 
     /// <summary>
-    /// Á¡µéÀÇ ¹«°ÔÁß½ÉÀ» Áß½ÉÀ¸·Î ÇÏ¿© radians ¸¸Å­ È¸Àü½ÃÅ² Á¡(PointR) ¸®½ºÆ®¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+    /// ì ë“¤ì˜ ë¬´ê²Œì¤‘ì‹¬ì„ ì¤‘ì‹¬ìœ¼ë¡œ í•˜ì—¬ radians ë§Œí¼ íšŒì „ì‹œí‚¨ ì (PointR) ë¦¬ìŠ¤íŠ¸ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public static List<PointR> RotatePoints(List<PointR> points, double radians)
     {
@@ -171,7 +171,7 @@ public struct PointR
     }
 
     /// <summary>
-    /// PointR¸¦ Vector2·Î º¯È¯ÇÕ´Ï´Ù. yÁÂÇ¥´Â À¯´ÏÆ¼ ÁÂÇ¥°è¿¡ ¸Â°Ô º¯È¯µË´Ï´Ù.
+    /// PointRë¥¼ Vector2ë¡œ ë³€í™˜í•©ë‹ˆë‹¤. yì¢Œí‘œëŠ” ìœ ë‹ˆí‹° ì¢Œí‘œê³„ì— ë§ê²Œ ë³€í™˜ë©ë‹ˆë‹¤.
     /// </summary>
     public static explicit operator PointR(Vector2 v)
     {
@@ -179,7 +179,7 @@ public struct PointR
     }
 
     /// <summary>
-    /// Vector2¸¦ PointR·Î º¯È¯ÇÕ´Ï´Ù. yÁÂÇ¥´Â È­¸é ÁÂÇ¥°è¿¡ ¸Â°Ô º¯È¯µË´Ï´Ù.
+    /// Vector2ë¥¼ PointRë¡œ ë³€í™˜í•©ë‹ˆë‹¤. yì¢Œí‘œëŠ” í™”ë©´ ì¢Œí‘œê³„ì— ë§ê²Œ ë³€í™˜ë©ë‹ˆë‹¤.
     /// </summary>
     public static explicit operator Vector2(PointR p)
     {

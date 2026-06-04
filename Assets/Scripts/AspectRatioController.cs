@@ -1,9 +1,9 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
 public class AspectRatioController : MonoBehaviour
 {
-    // ¸ñÇ¥ ºñÀ² ¼³Á¤ (16:9)
+    // ëª©í‘œ ë¹„ìœ¨ ì„¤ì • (16:9)
     public float targetAspect = 16f / 9f;
 
     void Start()
@@ -17,7 +17,7 @@ public class AspectRatioController : MonoBehaviour
 
         if (scaleHeight < 1.0f)
         {
-            // È­¸éÀÌ ³Ê¹« ³ô°í Á¼À» ¶§ ¡æ À§/¾Æ·¡ ¿©¹é (letterbox)
+            // í™”ë©´ì´ ë„ˆë¬´ ë†’ê³  ì¢ì„ ë•Œ â†’ ìœ„/ì•„ëž˜ ì—¬ë°± (letterbox)
             rect.width = 1.0f;
             rect.height = scaleHeight;
             rect.x = 0;
@@ -25,7 +25,7 @@ public class AspectRatioController : MonoBehaviour
         }
         else
         {
-            // È­¸éÀÌ ³ÐÀ» ¶§ ¡æ ÁÂ/¿ì ¿©¹é (pillarbox)
+            // í™”ë©´ì´ ë„“ì„ ë•Œ â†’ ì¢Œ/ìš° ì—¬ë°± (pillarbox)
             float scaleWidth = 1.0f / scaleHeight;
             rect.width = scaleWidth;
             rect.height = 1.0f;

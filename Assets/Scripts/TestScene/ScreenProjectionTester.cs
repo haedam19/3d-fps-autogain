@@ -1,8 +1,8 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class ScreenProjectionTester : MonoBehaviour
 {
-    [Tooltip("Å×½ºÆ®¿ë Ä«¸Ş¶ó (¾øÀ¸¸é MainCamera)")]
+    [Tooltip("í…ŒìŠ¤íŠ¸ìš© ì¹´ë©”ë¼ (ì—†ìœ¼ë©´ MainCamera)")]
     public Camera cam;
 
     void Start()
@@ -10,11 +10,11 @@ public class ScreenProjectionTester : MonoBehaviour
         if (cam == null)
             cam = Camera.main;
 
-        // 1) d °è»ê
+        // 1) d ê³„ì‚°
         float d = Screen.height / (2f * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad / 2f));
         Debug.Log($"[ProjectionTest] computed depth d = {d}");
 
-        // 2) ÀÓÀÇÀÇ r °ª 10°³
+        // 2) ì„ì˜ì˜ r ê°’ 10ê°œ
         float[] rValues = new float[] { 0.5f, 1f, 2f, 5f, 10f, 20f, 50f, 100f, 200f, 500f };
         foreach (float r in rValues)
         {
@@ -25,10 +25,10 @@ public class ScreenProjectionTester : MonoBehaviour
             Vector3 screenB = cam.WorldToScreenPoint(worldB);
 
             float pixelSize = screenB.x - screenA.x;
-            Debug.Log($"[r={r}] world points {worldA:F2}¡ê{worldB:F2} ¡æ pixelSize = {pixelSize:F2}");
+            Debug.Log($"[r={r}] world points {worldA:F2}â†”{worldB:F2} â†’ pixelSize = {pixelSize:F2}");
         }
 
-        // 3) È­¸é ³× ¸ğ¼­¸®¿¡ ÇØ´çÇÏ´Â ÁÂÇ¥ °ËÁõ
+        // 3) í™”ë©´ ë„¤ ëª¨ì„œë¦¬ì— í•´ë‹¹í•˜ëŠ” ì¢Œí‘œ ê²€ì¦
         Vector3[] screenCorners = new Vector3[]
         {
             new Vector3(0,             0,              d/10),  // Bottom-Left
@@ -42,7 +42,7 @@ public class ScreenProjectionTester : MonoBehaviour
         {
             Vector3 worldPos = cam.ScreenToWorldPoint(screenCorners[i]);
             Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
-            Debug.Log($"[Corner {cornerNames[i]}] screenIn = {screenCorners[i]} ¡æ world = {worldPos:F2} ¡æ screenOut = {screenPos:F2}");
+            Debug.Log($"[Corner {cornerNames[i]}] screenIn = {screenCorners[i]} â†’ world = {worldPos:F2} â†’ screenOut = {screenPos:F2}");
         }
     }
 }

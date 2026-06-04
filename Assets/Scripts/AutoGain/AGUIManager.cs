@@ -1,12 +1,12 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// µ¶¸³º¯¼ö ¼±ÅÃ UI¸¦ ´ã´çÇÏ´Â ¸Å´ÏÀú Å¬·¡½ºÀÔ´Ï´Ù.
-/// µÎ ¸ğµå Áß ÇÏ³ª(Reference / AutoGain)¸¦ ¼±ÅÃÇÏµµ·Ï »ç¿ëÀÚ¿¡°Ô ¾È³»ÇÕ´Ï´Ù.
+/// ë…ë¦½ë³€ìˆ˜ ì„ íƒ UIë¥¼ ë‹´ë‹¹í•˜ëŠ” ë§¤ë‹ˆì € í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+/// ë‘ ëª¨ë“œ ì¤‘ í•˜ë‚˜(Reference / AutoGain)ë¥¼ ì„ íƒí•˜ë„ë¡ ì‚¬ìš©ìì—ê²Œ ì•ˆë‚´í•©ë‹ˆë‹¤.
 /// </summary>
 public class AGUIManager : MonoBehaviour
 {
@@ -25,7 +25,7 @@ public class AGUIManager : MonoBehaviour
             return;
         }
 
-        // Äµ¹ö½º Ã£±â ¶Ç´Â »ı¼º
+        // ìº”ë²„ìŠ¤ ì°¾ê¸° ë˜ëŠ” ìƒì„±
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -36,7 +36,7 @@ public class AGUIManager : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // ¸Ş½ÃÁö ¹Ú½º ÆĞ³Î »ı¼º
+        // ë©”ì‹œì§€ ë°•ìŠ¤ íŒ¨ë„ ìƒì„±
         variableSelectBox = new GameObject("VariableSelectBox");
         variableSelectBox.transform.SetParent(canvas.transform, false);
         RectTransform panelRect = variableSelectBox.AddComponent<RectTransform>();
@@ -44,7 +44,7 @@ public class AGUIManager : MonoBehaviour
         Image panelImage = variableSelectBox.AddComponent<Image>();
         panelImage.color = new Color(0, 0, 0, 0.95f);
 
-        // ¼³¸í ÅØ½ºÆ®
+        // ì„¤ëª… í…ìŠ¤íŠ¸
         GameObject textObj = new GameObject("MsgText");
         textObj.transform.SetParent(variableSelectBox.transform, false);
         Text msgText = textObj.AddComponent<Text>();
@@ -56,7 +56,7 @@ public class AGUIManager : MonoBehaviour
         msgText.rectTransform.sizeDelta = new Vector2(760, 360);
         msgText.text = "Please choose one of the following modes:";
 
-        // Reference ¹öÆ°
+        // Reference ë²„íŠ¼
         GameObject refBtnObj = new GameObject("ReferenceButton");
         refBtnObj.transform.SetParent(variableSelectBox.transform, false);
         Button refButton = refBtnObj.AddComponent<Button>();
@@ -76,7 +76,7 @@ public class AGUIManager : MonoBehaviour
         refBtnText.fontSize = 40;
         refBtnText.rectTransform.sizeDelta = refBtnRect.sizeDelta;
 
-        // AutoGain ¹öÆ°
+        // AutoGain ë²„íŠ¼
         GameObject agBtnObj = new GameObject("AutoGainButton");
         agBtnObj.transform.SetParent(variableSelectBox.transform, false);
         Button agButton = agBtnObj.AddComponent<Button>();
@@ -96,7 +96,7 @@ public class AGUIManager : MonoBehaviour
         agBtnText.fontSize = 40;
         agBtnText.rectTransform.sizeDelta = agBtnRect.sizeDelta;
 
-        // ¹öÆ° ÀÌº¥Æ®
+        // ë²„íŠ¼ ì´ë²¤íŠ¸
         refButton.onClick.AddListener(() =>
         {
             variableSelectBox.SetActive(false);
@@ -124,11 +124,11 @@ public class AGUIManager : MonoBehaviour
             content = "Experiment has been paused.\nPress the Continue button to resume.";
         }
 
-        // ÀÌ¹Ì ¸Ş½ÃÁö ¹Ú½º°¡ ÀÖÀ¸¸é Áßº¹ »ı¼º ¹æÁö
+        // ì´ë¯¸ ë©”ì‹œì§€ ë°•ìŠ¤ê°€ ìˆìœ¼ë©´ ì¤‘ë³µ ìƒì„± ë°©ì§€
         if (stopMsgBox != null)
         {
             stopMsgBox.SetActive(true);
-            // ÅØ½ºÆ® °»½Å
+            // í…ìŠ¤íŠ¸ ê°±ì‹ 
             var msgText = stopMsgBox.transform.Find("MsgText")?.GetComponent<Text>();
             if (msgText != null)
             {
@@ -137,7 +137,7 @@ public class AGUIManager : MonoBehaviour
             return;
         }
 
-        // Canvas Ã£±â ¶Ç´Â »ı¼º
+        // Canvas ì°¾ê¸° ë˜ëŠ” ìƒì„±
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -148,7 +148,7 @@ public class AGUIManager : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // ¸Ş½ÃÁö ¹Ú½º ÆĞ³Î »ı¼º
+        // ë©”ì‹œì§€ ë°•ìŠ¤ íŒ¨ë„ ìƒì„±
         stopMsgBox = new GameObject("ExpStopMsgBox");
         stopMsgBox.transform.SetParent(canvas.transform, false);
         RectTransform panelRect = stopMsgBox.AddComponent<RectTransform>();
@@ -156,7 +156,7 @@ public class AGUIManager : MonoBehaviour
         Image panelImage = stopMsgBox.AddComponent<Image>();
         panelImage.color = new Color(0, 0, 0, 0.95f);
 
-        // ÅØ½ºÆ® »ı¼º
+        // í…ìŠ¤íŠ¸ ìƒì„±
         GameObject textObj = new GameObject("MsgText");
         textObj.transform.SetParent(stopMsgBox.transform, false);
         Text msgTextComp = textObj.AddComponent<Text>();
@@ -168,7 +168,7 @@ public class AGUIManager : MonoBehaviour
         msgTextComp.rectTransform.sizeDelta = new Vector2(760, 360);
         msgTextComp.text = content;
 
-        // Continue ¹öÆ° »ı¼º
+        // Continue ë²„íŠ¼ ìƒì„±
         GameObject buttonObj = new GameObject("ContinuetButton");
         buttonObj.transform.SetParent(stopMsgBox.transform, false);
         Button nextButton = buttonObj.AddComponent<Button>();
@@ -178,7 +178,7 @@ public class AGUIManager : MonoBehaviour
         btnRect.sizeDelta = new Vector2(320, 80);
         btnRect.anchoredPosition = new Vector2(0, -200);
 
-        // ¹öÆ° ÅØ½ºÆ®
+        // ë²„íŠ¼ í…ìŠ¤íŠ¸
         GameObject btnTextObj = new GameObject("ButtonText");
         btnTextObj.transform.SetParent(buttonObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
@@ -189,7 +189,7 @@ public class AGUIManager : MonoBehaviour
         btnText.fontSize = 20;
         btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
 
-        // ¹öÆ° Å¬¸¯ ÀÌº¥Æ® µî·Ï
+        // ë²„íŠ¼ í´ë¦­ ì´ë²¤íŠ¸ ë“±ë¡
         nextButton.onClick.AddListener(() =>
         {
             stopMsgBox.SetActive(false);
@@ -218,11 +218,11 @@ public class AGUIManager : MonoBehaviour
 
     public void ShowEndMsgBox()
     {
-        // Áßº¹ ¹æÁö: ±âÁ¸ ¸Ş½ÃÁö ¹Ú½º Á¦°Å ¶Ç´Â ¼û±â±â
+        // ì¤‘ë³µ ë°©ì§€: ê¸°ì¡´ ë©”ì‹œì§€ ë°•ìŠ¤ ì œê±° ë˜ëŠ” ìˆ¨ê¸°ê¸°
         if (conditionEndMsgBox != null)
             conditionEndMsgBox.SetActive(false);
 
-        // Canvas Ã£±â ¶Ç´Â »ı¼º
+        // Canvas ì°¾ê¸° ë˜ëŠ” ìƒì„±
         Canvas canvas = FindObjectOfType<Canvas>();
         if (canvas == null)
         {
@@ -233,7 +233,7 @@ public class AGUIManager : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // ¸Ş½ÃÁö ¹Ú½º ÆĞ³Î »ı¼º
+        // ë©”ì‹œì§€ ë°•ìŠ¤ íŒ¨ë„ ìƒì„±
         GameObject sessionEndMsgBox = new GameObject("SessionEndMsgBox");
         sessionEndMsgBox.transform.SetParent(canvas.transform, false);
         RectTransform panelRect = sessionEndMsgBox.AddComponent<RectTransform>();
@@ -241,7 +241,7 @@ public class AGUIManager : MonoBehaviour
         Image panelImage = sessionEndMsgBox.AddComponent<Image>();
         panelImage.color = new Color(0, 0, 0, 0.95f);
 
-        // ÅØ½ºÆ® »ı¼º
+        // í…ìŠ¤íŠ¸ ìƒì„±
         GameObject textObj = new GameObject("MsgText");
         textObj.transform.SetParent(sessionEndMsgBox.transform, false);
         Text msgTextComp = textObj.AddComponent<Text>();
@@ -253,7 +253,7 @@ public class AGUIManager : MonoBehaviour
         msgTextComp.rectTransform.sizeDelta = new Vector2(760, 360);
         msgTextComp.text = "Thank you for participating in the experiment.\nThe program will now exit.";
 
-        // Á¾·á ¹öÆ° »ı¼º
+        // ì¢…ë£Œ ë²„íŠ¼ ìƒì„±
         GameObject buttonObj = new GameObject("CloseButton");
         buttonObj.transform.SetParent(sessionEndMsgBox.transform, false);
         Button closeButton = buttonObj.AddComponent<Button>();
@@ -263,7 +263,7 @@ public class AGUIManager : MonoBehaviour
         btnRect.sizeDelta = new Vector2(320, 80);
         btnRect.anchoredPosition = new Vector2(0, -200);
 
-        // ¹öÆ° ÅØ½ºÆ®
+        // ë²„íŠ¼ í…ìŠ¤íŠ¸
         GameObject btnTextObj = new GameObject("ButtonText");
         btnTextObj.transform.SetParent(buttonObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
@@ -274,7 +274,7 @@ public class AGUIManager : MonoBehaviour
         btnText.fontSize = 20;
         btnText.rectTransform.sizeDelta = btnRect.sizeDelta;
 
-        // ¹öÆ° Å¬¸¯ ÀÌº¥Æ® µî·Ï
+        // ë²„íŠ¼ í´ë¦­ ì´ë²¤íŠ¸ ë“±ë¡
         closeButton.onClick.AddListener(() =>
         {
             sessionEndMsgBox.SetActive(false);

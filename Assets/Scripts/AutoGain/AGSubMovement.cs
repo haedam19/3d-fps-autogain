@@ -1,12 +1,12 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public struct AGSubMovement
 {
-    public int MinStartIndex;  // ½ÃÀÛ ±Ø¼Ò
-    public int MaxIndex;       // ±Ø´ë
-    public int MinEndIndex;    // ³¡ ±Ø¼Ò
+    public int MinStartIndex;  // ì‹œì‘ ê·¹ì†Œ
+    public int MaxIndex;       // ê·¹ëŒ€
+    public int MinEndIndex;    // ë ê·¹ì†Œ
 
     // classification flags
     public bool IsUnaimed;
