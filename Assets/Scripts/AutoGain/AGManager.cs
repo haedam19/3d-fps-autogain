@@ -37,6 +37,7 @@ public class AGManager : MonoBehaviour
     [SerializeField] AGUIManager uiManager;
     [SerializeField] AGMouse agMouse;
     [SerializeField] AGCurveViewer agCurveViewer;
+    [HideInInspector] public AGViewerClient viewerClient; 
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
 
@@ -116,13 +117,16 @@ public class AGManager : MonoBehaviour
     {
         currentState = GameState.Exit;
         agMouse.enabled = false;
-        string filename = AGCSVExporter.GetTimestampedFilename();
-        string path = Path.Combine(gameLogfilePath, filename);
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string sessionLogPath = Path.Combine(gameLogfilePath, timestamp);
+        Directory.CreateDirectory(sessionLogPath);
+        string filename = $"trial_results_{timestamp}.csv";
+        string path = Path.Combine(sessionLogPath, filename);
         try
         {
             AGCSVExporter.ExportTrialsToCSV(trials, path);
             if(currentGainMode == GainMode.AUTOGAIN)
-                AG.ExportGainLogs(Path.Combine(gameLogfilePath, "gain_log.csv"));
+                AG.ExportGainLogs(Path.Combine(sessionLogPath, $"gain_log_{timestamp}.csv"));
             Debug.Log("CSV export success: " + path);
             uiManager.ShowEndMsgBox();
         }

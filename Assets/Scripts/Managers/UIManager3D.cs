@@ -115,7 +115,7 @@ public class UIManager3D : MonoBehaviour
         startButton.onClick.AddListener(() =>
         {
             startMsgBox.SetActive(false);
-            GameManager3D.Instance.TestStart();
+            FittsManager.Instance.TestStart();
         });
     }
 
@@ -190,7 +190,7 @@ public class UIManager3D : MonoBehaviour
         nextButton.onClick.AddListener(() =>
         {
             conditionEndMsgBox.SetActive(false);
-            GameManager3D.Instance.NextCondition();
+            FittsManager.Instance.NextCondition();
         });
     }
 

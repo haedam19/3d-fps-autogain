@@ -90,7 +90,7 @@ namespace MouseLog
             PointR center = new PointR((double)Screen.width / 2, (double)Screen.height / 2);
 
             // 원본에서는 1D vs 2D 차이에 따라 달라졌지만 여기선 항상 2D
-            List<Target3D> targets = GameManager3D.Instance.targetManager.CreateTargets(index, trials, new ConditionConfig(A, W));
+            List<Target3D> targets = FittsManager.Instance.targetManager.CreateTargets(index, trials, new ConditionConfig(A, W));
 
             // Order the targets appropriately according to the ISO 9241-9 standard #########################################
             List<Target3D> orderedTargets = new List<Target3D>(targets.Count + 1);

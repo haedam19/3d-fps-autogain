@@ -8,13 +8,13 @@ using System.Xml;
 using MouseLog;
 using UnityEngine;
 
-public class GameManager3D : MonoBehaviour
+public class FittsManager : MonoBehaviour
 {
     private const double MinDblClickDist = 4.0; // minimum distance two clicks must be apart (filters double-clicks)
 
     #region Singleton Instance
-    static GameManager3D instance;
-    public static GameManager3D Instance
+    static FittsManager instance;
+    public static FittsManager Instance
     {
         get
         {
@@ -37,7 +37,7 @@ public class GameManager3D : MonoBehaviour
     private string gameLogfilePath; // 게임 실행 관련 로그 기록 경로
 
     [Header("SubSystems")]
-    public TargetManager3D targetManager;
+    public FittsTargetManager3D targetManager;
     public UIManager3D uiManager;
     public FittsMouseTracker mouseTracker;
 

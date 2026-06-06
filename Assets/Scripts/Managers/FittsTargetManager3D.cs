@@ -10,7 +10,7 @@ using System.Xml;
 /// <summary>
 /// 3D 타겟 실험의 타겟 및 Condition 오브젝트 풀/전환을 관리합니다.
 /// </summary>
-public class TargetManager3D : MonoBehaviour
+public class FittsTargetManager3D : MonoBehaviour
 {
     [SerializeField] GameObject targetPrefab;
     [SerializeField] GameObject objectPoolRoot;
