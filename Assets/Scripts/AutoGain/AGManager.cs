@@ -36,21 +36,20 @@ public class AGManager : MonoBehaviour
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
     [SerializeField] AGMouse agMouse;
-    [SerializeField] AGCurveViewer agCurveViewer;
+    [SerializeField] AGCurveViewer agInspectorCurveViewer;
     [HideInInspector] public AGViewerClient viewerClient; 
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
 
     [SerializeField] int practiceTrialCount = 10; // 연습 Trial의 수 (시작 Trial 포함)
     [SerializeField] int totalTrialCount = 300; // 총 Trial의 수
-
+    
     List<AGTrialData> trials;
     AGTrialData _tdata;
 
+    string continueSource; // 이전 실험결과에서 이어할 경우 이어 실행할 실험결과 폴더 이름(타임스탬프 형식으로 된 것)
     float maxRawSpeed = 0f;
     float minRawSpeed = float.MaxValue;
-
-    private string gameLogfilePath; // 게임 실행 관련 로그 기록 경로
 
     private void Awake()
     {
@@ -61,12 +60,6 @@ public class AGManager : MonoBehaviour
         }
         instance = this;
 
-#if UNITY_EDITOR
-        gameLogfilePath = Application.dataPath + "/Log";
-#elif UNITY_STANDALONE_WIN
-        gameLogfilePath = Application.persistentDataPath;
-#endif
-
         currentState = GameState.Entrance;
         agMouse.Init();
         agMouse.enabled = false;
@@ -74,6 +67,11 @@ public class AGManager : MonoBehaviour
         trials = new List<AGTrialData>(totalTrialCount);
 
         uiManager.ShowIndependentVariableSelectionUI();
+    }
+
+    public void SetContinueSource(string sourceFolderName)
+    {
+        continueSource = string.IsNullOrWhiteSpace(sourceFolderName) ? null : sourceFolderName.Trim();
     }
 
     /// <summary> AGMouse 객체를 생성해 Gain 모드를 설정하고 실험을 시작합니다. </summary>
@@ -84,7 +82,7 @@ public class AGManager : MonoBehaviour
 
         if (gainMode == GainMode.AUTOGAIN)
         {
-            autoGain = new AutoGain(3.0);
+            autoGain = new AutoGain(3.0, continueSource);
             agMouse.useAutoGain = true;
         }
         else
@@ -118,21 +116,24 @@ public class AGManager : MonoBehaviour
         currentState = GameState.Exit;
         agMouse.enabled = false;
         string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string sessionLogPath = Path.Combine(gameLogfilePath, timestamp);
+        string sessionLogPath = Path.Combine(ProjectPaths.AutoGainLogPath, timestamp);
         Directory.CreateDirectory(sessionLogPath);
         string filename = $"trial_results_{timestamp}.csv";
-        string path = Path.Combine(sessionLogPath, filename);
+        string csvFullPath = Path.Combine(sessionLogPath, filename);
         try
         {
-            AGCSVExporter.ExportTrialsToCSV(trials, path);
+            AGCSVExporter.ExportTrialsToCSV(trials, csvFullPath);
             if(currentGainMode == GainMode.AUTOGAIN)
+            {
                 AG.ExportGainLogs(Path.Combine(sessionLogPath, $"gain_log_{timestamp}.csv"));
-            Debug.Log("CSV export success: " + path);
+                AG.ExportFinalGainData(Path.Combine(sessionLogPath, $"final_gain_data_{timestamp}.json"));
+            }
+            
             uiManager.ShowEndMsgBox();
         }
         catch (System.Exception ex)
         {
-            Debug.LogError("CSV export failed: " + ex.Message);
+            Debug.LogError("Result export failed: " + ex.Message);
         }
     }
 
@@ -223,7 +224,13 @@ public class AGManager : MonoBehaviour
             if(currentGainMode == GainMode.AUTOGAIN)
             {
                 AG.UpdateGainCurve(_tdata);
-                agCurveViewer.UpdateCurveView();
+                agInspectorCurveViewer.UpdateCurveView();
+
+                if (viewerClient != null && viewerClient.IsConnected)
+                {
+                    string testJson = $"{{\"type\":\"gainSnapshot\",\"trialIndex\":{trials.Count},\"timestamp\":\"{System.DateTime.Now:O}\",\"source\":\"unityTest\",\"speeds\":[0.0,0.5,1.0,1.5,2.0],\"gains\":[1.0,1.1,1.25,1.18,1.05]}}";
+                    _ = viewerClient.SendTextAsync(testJson);
+                }
             }
             if (_tdata.IsError)
                 DoError();

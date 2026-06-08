@@ -9,11 +9,25 @@ using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class AutoGain
 {
+    public const int GainDataSchemaVersion = 1;
+
+    [System.Serializable]
+    public class GainData
+    {
+        public int schemaVersion;
+        public int totalUpdateCount;
+        public int binCount;
+        public double binSize;
+        public double[] gainCurve;
+        public int[] binUpdateCount;
+    }
+
     // Constants
     // 마우스 정확도 향상 Off, 배율 1 기준 0~3000 counts/s 정도 크기
-    const int binCount = 64; // how many bins are there
-    const double binSize = 48f; // 속도 구간 크기(count / s)
-    List<double> gainCurves = new List<double>(binCount);
+    public const int binCount = 64; // how many bins are there
+    public const double binSize = 48f; // 속도 구간 크기(count / s)
+    List<double> gainCurves;
+    List<int> binUpdateCounter; 
     const double sensitivityInverseScaler = 100.0; // gain을 그대로 저장하면 자릿수가 너무 작아 100배 키워 저장. 사용시 1/100로 나눠서 사용.
     const double C = 0.0055;
 
@@ -42,7 +56,7 @@ public class AutoGain
     private int _periodUndershoot = 0;
 
     // 로그 저장용 리스트
-    private List<GainLogEntry> _gainLogs = new List<GainLogEntry>();
+    private List<GainLogEntry> _gainLogs;
 
     // 로그 항목 구조체
     private struct GainLogEntry
@@ -56,12 +70,20 @@ public class AutoGain
     }
     #endregion
 
-    public AutoGain(double initialGain)
+    public AutoGain(double initialGain, string continueSource = null)
     {
-        for (int i = 0; i < binCount; i++)
+        if (!TryLoadPreviousGainData(continueSource))
         {
-            // Gain Function 초기화: 초기 Gain 값으로 모든 bin에 동일한 Gain 적용
-            gainCurves.Add(initialGain);
+            _updateCount = 0;
+            gainCurves = new List<double>(binCount);
+            binUpdateCounter = new List<int>(binCount);
+            _gainLogs = new List<GainLogEntry>();
+            for (int i = 0; i < binCount; i++)
+            {
+                // Gain Function 초기화: 초기 Gain 값으로 모든 bin에 동일한 Gain 적용
+                gainCurves.Add(initialGain);
+                binUpdateCounter.Add(0);
+            }
         }
     }
 
@@ -136,6 +158,9 @@ public class AutoGain
         // Gain Curve를 Trial Data에 따라 업데이트합니다.
         // tdata는 Trial의 속도, 움직임 등을 포함하는 데이터 구조체입니다.
         // 이 함수는 Trial Data를 분석하여 gainCurves를 조정합니다.
+
+        if (tdata.IsPractice)
+            return;
 
         // 1) 분석을 위해 Movement Profile 생성
         AGMovementData.Profiles profile = tdata.Movement.CreateSmoothedProfiles();
@@ -278,6 +303,7 @@ public class AutoGain
                     double gainDelta = C * R;
                     gainCurves[j] += gainDelta; // Gain Curve 업데이트
                     gainCurves[j] = Math.Max(gainCurves[j], 0.1); // Gain은 0.1보다 작아질 수 없음
+                    binUpdateCounter[j]++;
                 }
             }
 
@@ -374,6 +400,11 @@ public class AutoGain
         return new List<double>(gainCurves);
     }
 
+    public List<int> GetBinUpdateCounters()
+    {
+        return new List<int>(binUpdateCounter);
+    }
+
     public void ExportGainLogs(string filePath = "gain_log.csv")
     {
         if (_gainLogs.Count == 0)
@@ -412,4 +443,178 @@ public class AutoGain
         File.WriteAllText(filePath, sb.ToString());
     }
 
+    public void ExportFinalGainData(string filePath = "final_gain_data.json")
+    {
+        GainData gainData = new GainData
+        {
+            schemaVersion = GainDataSchemaVersion,
+            totalUpdateCount = _updateCount,
+            binCount = binCount,
+            binSize = binSize,
+            gainCurve = GetGainCurve().ToArray(),
+            binUpdateCount = GetBinUpdateCounters().ToArray()
+        };
+        string json = JsonUtility.ToJson(gainData, true);
+        File.WriteAllText(filePath, json);
+    }
+
+    private bool TryLoadPreviousGainData(string continueSource)
+    {
+        if (string.IsNullOrEmpty(continueSource))
+            return false;
+
+        gainCurves = new List<double>(binCount);
+        binUpdateCounter = new List<int>(binCount);
+
+        string dirName = Path.Combine(ProjectPaths.AutoGainLogPath, continueSource);
+        if (!Directory.Exists(dirName))
+            return false;
+
+        if (!TryLoadValidGainData(dirName, continueSource))
+            return false;
+
+        if (!TryLoadValidGainLog(dirName, continueSource))
+            return false;
+
+        return true;
+    }
+
+    private bool TryLoadValidGainData(string dirName, string sourceFolderName)
+    {
+        string jsonPath = Path.Combine(dirName, $"final_gain_data_{sourceFolderName}.json");
+        if (!File.Exists(jsonPath))
+            return false;
+
+        GainData gainData;
+        try
+        {
+            string json = File.ReadAllText(jsonPath);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                Debug.LogWarning($"Final gain data file is empty: {jsonPath}");
+                return false;
+            }
+
+            gainData = JsonUtility.FromJson<GainData>(json);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"Failed to read final gain data: {ex.Message}");
+            return false;
+        }
+
+        if (gainData == null ||
+            gainData.schemaVersion != GainDataSchemaVersion ||
+            gainData.binCount != binCount ||
+            gainData.binSize != binSize ||
+            gainData.totalUpdateCount < 0 ||
+            gainData.gainCurve == null || gainData.gainCurve.Length != binCount ||
+            gainData.binUpdateCount == null || gainData.binUpdateCount.Length != binCount)
+            return false;
+
+        _updateCount = gainData.totalUpdateCount;
+        gainCurves = new List<double>(gainData.gainCurve);
+        binUpdateCounter = new List<int>(gainData.binUpdateCount);
+
+        return true;
+    }
+
+    private bool TryLoadValidGainLog(string dirName, string sourceFolderName)
+    {
+        _gainLogs = new List<GainLogEntry>();
+
+        string gainLogPath = Path.Combine(dirName, $"gain_log_{sourceFolderName}.csv");
+        int expectedSnapshotCount = _updateCount / RecordInterval;
+        if (!File.Exists(gainLogPath))
+            return expectedSnapshotCount == 0;
+
+        try
+        {
+            string[] lines = File.ReadAllLines(gainLogPath);
+            int expectedLineCount = expectedSnapshotCount + 1;
+            if (lines.Length != expectedLineCount)
+            {
+                Debug.LogWarning($"Gain log row count mismatch: {lines.Length} != {expectedLineCount}");
+                return false;
+            }
+
+            string expectedHeader = GenerateGainLogHeader();
+            if (lines.Length == 0 || lines[0] != expectedHeader)
+            {
+                Debug.LogWarning("Gain log header is invalid.");
+                return false;
+            }
+
+            int expectedColumnCount = binCount + 4;
+            int previousUpdateCount = 0;
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] fields = lines[i].Split(',');
+                if (fields.Length != expectedColumnCount)
+                {
+                    Debug.LogWarning($"Gain log column count mismatch at row {i}: {fields.Length} != {expectedColumnCount}");
+                    return false;
+                }
+
+                if (!int.TryParse(fields[0], out int updateCount) ||
+                    !double.TryParse(fields[1], out double subAimPointValue) ||
+                    !int.TryParse(fields[2], out int overshootCount) ||
+                    !int.TryParse(fields[3], out int undershootCount))
+                {
+                    Debug.LogWarning($"Gain log metadata parse failed at row {i}");
+                    return false;
+                }
+
+                if (updateCount != i * RecordInterval || updateCount <= previousUpdateCount)
+                {
+                    Debug.LogWarning($"Gain log UpdateCount is invalid at row {i}: {updateCount}");
+                    return false;
+                }
+
+                double[] gainCurve = new double[binCount];
+                for (int j = 0; j < binCount; j++)
+                {
+                    if (!double.TryParse(fields[j + 4], out gainCurve[j]))
+                    {
+                        Debug.LogWarning($"Gain log gain value parse failed at row {i}, bin {j}");
+                        return false;
+                    }
+                }
+
+                _gainLogs.Add(new GainLogEntry
+                {
+                    UpdateCount = updateCount,
+                    GainCurve = gainCurve,
+                    SubAimPoint = subAimPointValue,
+                    SubmovementCount = 0,
+                    OvershootCount = overshootCount,
+                    UndershootCount = undershootCount
+                });
+
+                previousUpdateCount = updateCount;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"Failed to read gain log: {ex.Message}");
+            return false;
+        }
+
+        return true;
+    }
+
+    private string GenerateGainLogHeader()
+    {
+        List<string> headers = new List<string>
+        {
+            "UpdateCount",
+            "SubAimPoint",
+            "OverShoot",
+            "UnderShoot"
+        };
+
+        headers.AddRange(Enumerable.Range(0, binCount).Select(i => $"bin{i}"));
+        return string.Join(",", headers);
+
+    }
 }

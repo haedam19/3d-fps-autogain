@@ -34,8 +34,6 @@ public class FittsManager : MonoBehaviour
 
     [SerializeField] private GameState currentState; // 현재 게임 상태
 
-    private string gameLogfilePath; // 게임 실행 관련 로그 기록 경로
-
     [Header("SubSystems")]
     public FittsTargetManager3D targetManager;
     public UIManager3D uiManager;
@@ -75,22 +73,18 @@ public class FittsManager : MonoBehaviour
         uiManager.Init();
         targetManager.Init();
 
-        // 로그 파일 경로 및 이름 설정 & xml 로그 준비
-#if UNITY_EDITOR
-        gameLogfilePath = Application.dataPath + "/Log";
-#elif UNITY_STANDALONE_WIN
-        gameLogfilePath = Application.persistentDataPath;
-#endif
+        Directory.CreateDirectory(ProjectPaths.FittsLogPath);
+
         //session_onfig.json 로드 -> _sdata, _cdata, _tdata 초기화
         SessionConfiguration sessionconfig = LoadData();
 
         // 남아있는 .tmp 파일 있으면 정리. (이전 실행 중에 비정상 종료되어 남아있는 파일)
-        string leftoverTmp = Directory.GetFiles(gameLogfilePath, "*.tmp").FirstOrDefault();
+        string leftoverTmp = Directory.GetFiles(ProjectPaths.FittsLogPath, "*.tmp").FirstOrDefault();
         if (leftoverTmp != null)
             File.Delete(leftoverTmp);
 
         // FilenameBase: s{subject id}_{1D / 2D}_{mnone / nomet}
-        _fileNoExt = string.Format("{0}\\{1}__{2}", gameLogfilePath, _sdata.FilenameBase, Environment.TickCount);
+        _fileNoExt = string.Format("{0}\\{1}__{2}", ProjectPaths.FittsLogPath, _sdata.FilenameBase, Environment.TickCount);
         _writer = new XmlTextWriter(_fileNoExt + ".tmp", Encoding.UTF8); // 처음엔 .tmp로 저장. 측정이 정상적으로 종료되었을 때만 .xml로 변경
         _writer.Formatting = Formatting.Indented;
         _sdata.WriteXmlHeader(_writer);
@@ -227,7 +221,7 @@ public class FittsManager : MonoBehaviour
     {
         SessionConfiguration sessionConfig = null;
         string json = null;
-        json = File.ReadAllText(Path.Combine(Application.dataPath, "Json", "session_config.json"));
+        json = File.ReadAllText(Path.Combine(ProjectPaths.ConfigPath, "fitts_session_config.json"));
         string fileName = string.Format("ConfigLoadLog_{0}_{1}.txt", DateTime.Now.ToString("yyyy-MM-dd"), Environment.TickCount);
 
         if (json != null)
@@ -240,20 +234,20 @@ public class FittsManager : MonoBehaviour
                 _cdata = _sdata[0]; // first overall condition
                 _tdata = _cdata[0]; // first trial is special start-area trial at index 0
                 totalTrialCount = sessionConfig.trials;
-                using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                using (StreamWriter sw = new StreamWriter(Path.Combine(ProjectPaths.FittsLogPath, fileName), true))
                     sw.WriteLine(json);
 
             }
             else
             {
-                using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                using (StreamWriter sw = new StreamWriter(Path.Combine(ProjectPaths.FittsLogPath, fileName), true))
                     sw.WriteLine("Invalid config");
                 Application.Quit();
             }
         }
         else
         {
-            using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+            using (StreamWriter sw = new StreamWriter(Path.Combine(ProjectPaths.FittsLogPath, fileName), true))
                 sw.WriteLine("Failed to load session_config.json");
             Application.Quit();
         }
@@ -276,6 +270,9 @@ public class FittsManager : MonoBehaviour
             {
                 string tmpPath = _fileNoExt + ".tmp";
                 string finalPath = _fileNoExt + ".xml";
+
+                _writer.Flush();
+                _writer.Close();
 
                 if (File.Exists(tmpPath))
                     File.Move(tmpPath, finalPath); // rename only if fully completed
