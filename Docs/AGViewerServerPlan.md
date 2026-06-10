@@ -21,24 +21,52 @@ AG Viewer 서버는 Unity로 만든 3D AutoGain 프로그램과 Chrome 기반 vi
 
 Unity-to-server, server-to-viewer 통신은 JSON 메시지 형식으로 통일하는 것이 좋다.
 
-Gain curve snapshot 예시:
+message type:
+- `connectionStatus`
+- `metaData`
+- `fullGainCurve`
+- `gainSnapshot`
 
+metaData는 gainCurve의 구간 폭과 구간 수 데이터를 갖는다.
+형식 예시는 다음과 같다.
 ```json
 {
-  "type": "gainSnapshot",
-  "trialIndex": 30,
+  "type": "metaData",
   "timestamp": "2026-06-07T01:20:00",
-  "speeds": [0.0, 0.1, 0.2],
-  "gains": [1.0, 1.12, 1.25]
+  "binSize": 48,
+  "binCount": 64
 }
 ```
 
-권장 message type:
+fullGainCurve는 gainCurve 전체 데이터이다.
+AutoGain의 gainCurve Update가 발생했을 때 또는 초기화 직후 전송한다.
+(AutoGain은 이어하기를 지원한다)
+gains 필드에는 각 bin별 gain 값이 들어있으며, 각 bin의 폭은 메타데이터의 binSize만큼이다.
+예를 들어 binSize가 48이면, gains의 i번째 데이터는 속도 [i * 48, (i+1) * 48] 구간의 gain이다.
+gain의 길이는 binCount와 같다.
+불러온 직후에 보내는 메세지의 경우 updateIndex에는 gainCurve가 이전 시행에서 누적한 update 횟수가 들어간다.
+만약 완전 fresh data에서 출발할 경우 updateIndex는 0, gains는 모두 초기값이 들어간 채 전송된다.
+```json
+{
+  "type": "fullGainCurve",
+  "timestamp": "2026-06-07T01:20:00",
+  "updateIndex": 32,
+  "gains": [1.0, 1.12, 1.25, 1.1],
+  "binUpdateCounts": [0, 1, 2, 1]
+}
+```
 
-- `connectionStatus`
-- `gainSnapshot`
-- `trialResult`
-- `error`
+gainSnapshot은 fullGainCurve 데이터 형식이 같으나, (binUpdateCounts는 제외)
+AutoGain클래스에서 스냅샷을 저장할 때 viewer에 동기화하기 위한 메세지이다.
+뷰어는 gainSnapshot을 여럿 저장할 수 있도록 하고, gainSnapShot 메세지를 받으면 종료될 때까지 저장하고 있어야 한다.
+```json
+{
+  "type": "gainSnapshot",
+  "timestamp": "2026-06-07T01:20:00",
+  "updateIndex": 32,
+  "gains": [1.0, 1.12, 1.25, 1.1]
+}
+```
 
 ## 3. Unity에서 서버로 보내는 데이터
 

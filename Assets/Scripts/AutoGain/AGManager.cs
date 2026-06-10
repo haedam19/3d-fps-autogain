@@ -36,7 +36,6 @@ public class AGManager : MonoBehaviour
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
     [SerializeField] AGMouse agMouse;
-    [SerializeField] AGCurveViewer agInspectorCurveViewer;
     [HideInInspector] public AGViewerClient viewerClient; 
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
@@ -84,6 +83,8 @@ public class AGManager : MonoBehaviour
         {
             autoGain = new AutoGain(3.0, continueSource);
             agMouse.useAutoGain = true;
+            if (viewerClient != null && viewerClient.IsConnected)
+                SendAGInitDataToViewer();
         }
         else
         {
@@ -223,13 +224,20 @@ public class AGManager : MonoBehaviour
             uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
             if(currentGainMode == GainMode.AUTOGAIN)
             {
-                AG.UpdateGainCurve(_tdata);
-                agInspectorCurveViewer.UpdateCurveView();
+                AG.UpdateGainCurve(_tdata, out bool gainUpdated, out bool snapshotRecorded);
 
-                if (viewerClient != null && viewerClient.IsConnected)
+                if (viewerClient != null && viewerClient.IsConnected && gainUpdated)
                 {
-                    string testJson = $"{{\"type\":\"gainSnapshot\",\"trialIndex\":{trials.Count},\"timestamp\":\"{System.DateTime.Now:O}\",\"source\":\"unityTest\",\"speeds\":[0.0,0.5,1.0,1.5,2.0],\"gains\":[1.0,1.1,1.25,1.18,1.05]}}";
-                    _ = viewerClient.SendTextAsync(testJson);
+                    FullGainCurve gainData = AG.GetFullGainCurveJsonData();
+                    string gainDataJson = JsonUtility.ToJson(gainData);
+                    _ = viewerClient.SendTextAsync(gainDataJson);
+
+                    if (snapshotRecorded)
+                    {
+                        GainSnapshot gainSnapshot = AG.GetLastGainSnapshotJsonData();
+                        string gainSnapshotJson = JsonUtility.ToJson(gainSnapshot);
+                        _ = viewerClient.SendTextAsync(gainSnapshotJson);
+                    }
                 }
             }
             if (_tdata.IsError)
@@ -253,6 +261,25 @@ public class AGManager : MonoBehaviour
             }
             
         }
+    }
+
+    /// <summary>
+    /// AutoGain의 초기 데이터를 Viewer에 전송합니다.
+    /// </summary>
+    private async void SendAGInitDataToViewer()
+    {
+        if (viewerClient == null || !viewerClient.IsConnected || AG == null)
+            return;
+
+        MetaData metaData = AG.GetMetaData();
+        await viewerClient.SendTextAsync(JsonUtility.ToJson(metaData));
+
+        FullGainCurve gainData = AG.GetFullGainCurveJsonData();
+        await viewerClient.SendTextAsync(JsonUtility.ToJson(gainData));
+
+        List<GainSnapshot> snapshots = AG.GetGainSnapshotJsonDataList();
+        foreach (GainSnapshot snapshot in snapshots)
+            await viewerClient.SendTextAsync(JsonUtility.ToJson(snapshot));
     }
 
     private void DoError()

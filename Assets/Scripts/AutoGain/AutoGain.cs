@@ -153,8 +153,11 @@ public class AutoGain
 
     #region Gain Adjustment
 
-    public void UpdateGainCurve(AGTrialData tdata)
+    public void UpdateGainCurve(AGTrialData tdata, out bool gainUpdated, out bool snapshotRecorded)
     {
+        gainUpdated = false;
+        snapshotRecorded = false;
+
         // Gain Curve를 Trial Data에 따라 업데이트합니다.
         // tdata는 Trial의 속도, 움직임 등을 포함하는 데이터 구조체입니다.
         // 이 함수는 Trial Data를 분석하여 gainCurves를 조정합니다.
@@ -315,6 +318,7 @@ public class AutoGain
         // 6) 로그 기록
         _periodSubmovements += submovements.Count;
         _updateCount++;
+        gainUpdated = true;
         // _periodOvershoot, _periodUndershoot는 Gain Curve 업데이트 시 이미 업데이트됨
         if (_updateCount % RecordInterval == 0)
         {
@@ -332,6 +336,7 @@ public class AutoGain
             _periodSubmovements = 0;
             _periodOvershoot = 0;
             _periodUndershoot = 0;
+            snapshotRecorded = true;
         }
 
     }
@@ -403,6 +408,59 @@ public class AutoGain
     public List<int> GetBinUpdateCounters()
     {
         return new List<int>(binUpdateCounter);
+    }
+
+    public MetaData GetMetaData()
+    {
+        return new MetaData
+        {
+            timestamp = DateTime.Now.ToString("O"),
+            binSize = binSize,
+            binCount = binCount
+        };
+    }
+
+    public FullGainCurve GetFullGainCurveJsonData()
+    {
+        return new FullGainCurve
+        {
+            timestamp = DateTime.Now.ToString("O"),
+            updateIndex = _updateCount,
+            gains = gainCurves.Select(g => (float)g).ToArray(),
+            binUpdateCounts = binUpdateCounter.ToArray()
+        };
+    }
+
+    public GainSnapshot GetLastGainSnapshotJsonData()
+    {
+        if (_gainLogs.Count == 0)
+            return null;
+
+        GainLogEntry sourceData = _gainLogs.Last();
+
+        return new GainSnapshot
+        {
+            timestamp = DateTime.Now.ToString("O"),
+            updateIndex = sourceData.UpdateCount,
+            gains = sourceData.GainCurve.Select(g => (float)g).ToArray()
+        };
+    }
+
+    public List<GainSnapshot> GetGainSnapshotJsonDataList()
+    {
+        List<GainSnapshot> snapshots = new List<GainSnapshot>(_gainLogs.Count);
+
+        foreach (GainLogEntry sourceData in _gainLogs)
+        {
+            snapshots.Add(new GainSnapshot
+            {
+                timestamp = DateTime.Now.ToString("O"),
+                updateIndex = sourceData.UpdateCount,
+                gains = sourceData.GainCurve.Select(g => (float)g).ToArray()
+            });
+        }
+
+        return snapshots;
     }
 
     public void ExportGainLogs(string filePath = "gain_log.csv")
