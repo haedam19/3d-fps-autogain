@@ -173,8 +173,8 @@ MonoBehaviour:
   uiManager: {fileID: 55267410}
   agMouse: {fileID: 2073934691}
   viewerClient: {fileID: 0}
-  practiceTrialCount: 5
-  totalTrialCount: 20
+  practiceTrialCount: 10
+  totalTrialCount: 210
 --- !u!114 &55267410
 MonoBehaviour:
   m_ObjectHideFlags: 0

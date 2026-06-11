@@ -47,7 +47,7 @@ public class AutoGain
 
     #region Log Fields
     // 로그 주기 설정
-    private const int RecordInterval = 10;
+    private const int RecordInterval = 25;
     private int _updateCount = 0;
 
     // 기간별 누적 카운터

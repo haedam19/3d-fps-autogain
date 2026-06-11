@@ -17,8 +17,8 @@ unityConnection: WebSocket | None = None
 viewerConnections: list[WebSocket] = []
 defaultConfig = {
     "maxSnapshotCount": 10,
-    "latestSnapshotGraphRgb": {"r": 0, "g": 130, "b": 72},
-    "oldestSnapshotGraphRgb": {"r": 176, "g": 225, "b": 188},
+    "latestSnapshotGraphHsv": {"h": 120, "s": 100, "v": 100},
+    "oldestSnapshotGraphHsv": {"h": 0, "s": 100, "v": 100},
     "currentGainCurveGraphRgb": {"r": 38, "g": 99, "b": 180},
     "currentGainLineWidth": 3,
     "snapshotGainLineWidth": 2,

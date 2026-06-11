@@ -1,0 +1,19 @@
+{
+    "groupNames":[
+        "Reference",
+        "AutoGain"
+    ],
+    "files":[
+        [
+            "trial_results_20260611_152737.csv",
+            "trial_results_20260611_153427.csv"
+        ],
+        [
+            "trial_results_20260611_160524.csv",
+            "trial_results_20260611_162311.csv"
+        ]
+    ],
+    "includePractice": false,
+    "includeErrorTrials": false,
+    "windowSize": 50
+}

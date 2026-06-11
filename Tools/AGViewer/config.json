@@ -1,14 +1,14 @@
 {
     "maxSnapshotCount": 10,
-    "latestSnapshotGraphRgb": {
-        "r": 48,
-        "g": 252,
-        "b": 48
+    "latestSnapshotGraphHsv": {
+        "h": 120,
+        "s": 100,
+        "v": 100
     },
-    "oldestSnapshotGraphRgb": {
-        "r": 184,
-        "g": 252,
-        "b": 184
+    "oldestSnapshotGraphHsv": {
+        "h": 0,
+        "s": 100,
+        "v": 100
     },
     "currentGainCurveGraphRgb": {
         "r": 0,

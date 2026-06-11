@@ -15,8 +15,8 @@ const chartPadding = {
 
 let viewerConfig = {
     maxSnapshotCount: 10,
-    latestSnapshotGraphRgb: { r: 0, g: 130, b: 72 },
-    oldestSnapshotGraphRgb: { r: 176, g: 225, b: 188 },
+    latestSnapshotGraphHsv: { h: 120, s: 100, v: 100 },
+    oldestSnapshotGraphHsv: { h: 0, s: 100, v: 100 },
     currentGainCurveGraphRgb: { r: 38, g: 99, b: 180 },
     currentGainLineWidth: 3,
     snapshotGainLineWidth: 2,
@@ -66,11 +66,49 @@ function rgbToCss(rgb) {
     return `rgb(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)})`;
 }
 
-function interpolateRgb(startRgb, endRgb, ratio) {
+function hsvToRgb(hsv) {
+    const h = ((Number(hsv.h) % 360) + 360) % 360;
+    const s = Math.min(100, Math.max(0, Number(hsv.s))) / 100;
+    const v = Math.min(100, Math.max(0, Number(hsv.v))) / 100;
+    const c = v * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = v - c;
+    let rp = 0;
+    let gp = 0;
+    let bp = 0;
+
+    if (h < 60) {
+        rp = c;
+        gp = x;
+    } else if (h < 120) {
+        rp = x;
+        gp = c;
+    } else if (h < 180) {
+        gp = c;
+        bp = x;
+    } else if (h < 240) {
+        gp = x;
+        bp = c;
+    } else if (h < 300) {
+        rp = x;
+        bp = c;
+    } else {
+        rp = c;
+        bp = x;
+    }
+
     return {
-        r: startRgb.r * (1 - ratio) + endRgb.r * ratio,
-        g: startRgb.g * (1 - ratio) + endRgb.g * ratio,
-        b: startRgb.b * (1 - ratio) + endRgb.b * ratio,
+        r: (rp + m) * 255,
+        g: (gp + m) * 255,
+        b: (bp + m) * 255,
+    };
+}
+
+function interpolateHsv(startHsv, endHsv, ratio) {
+    return {
+        h: Number(startHsv.h) * (1 - ratio) + Number(endHsv.h) * ratio,
+        s: Number(startHsv.s) * (1 - ratio) + Number(endHsv.s) * ratio,
+        v: Number(startHsv.v) * (1 - ratio) + Number(endHsv.v) * ratio,
     };
 }
 
@@ -78,15 +116,15 @@ function getSnapshotColor(snapshotIndexFromLatest) {
     const maxSnapshotCount = Math.max(1, Number(viewerConfig.maxSnapshotCount) || 1);
 
     if (maxSnapshotCount === 1) {
-        return rgbToCss(viewerConfig.latestSnapshotGraphRgb);
+        return rgbToCss(hsvToRgb(viewerConfig.latestSnapshotGraphHsv));
     }
 
     const ratio = Math.min(1, Math.max(0, (snapshotIndexFromLatest - 1) / (maxSnapshotCount - 1)));
-    return rgbToCss(interpolateRgb(
-        viewerConfig.latestSnapshotGraphRgb,
-        viewerConfig.oldestSnapshotGraphRgb,
+    return rgbToCss(hsvToRgb(interpolateHsv(
+        viewerConfig.latestSnapshotGraphHsv,
+        viewerConfig.oldestSnapshotGraphHsv,
         ratio,
-    ));
+    )));
 }
 
 function getLineWidth(configKey, fallbackWidth) {
