@@ -1,4 +1,4 @@
-/* 
+﻿/* 
  * Cloned from WobbrockLib.dll
  * C# .NET 2.0 library of application-agnostic formulae, widgets, data structures, and algorithms
  * 

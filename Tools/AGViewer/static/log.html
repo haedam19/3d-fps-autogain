@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3D AutoGain Viewer Log</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div>
+                <h1>3D AutoGain Viewer Log</h1>
+                <p id="connectionText">Viewer disconnected</p>
+            </div>
+            <button id="clearButton" type="button">Clear</button>
+        </header>
+
+        <section class="messagePanel" aria-label="Received JSON messages">
+            <div class="messageHeader">
+                <span>Received JSON</span>
+                <span id="messageCount">0 messages</span>
+            </div>
+            <div id="messageList" class="messageList"></div>
+        </section>
+    </main>
+
+    <script src="/static/log.js"></script>
+</body>
+</html>

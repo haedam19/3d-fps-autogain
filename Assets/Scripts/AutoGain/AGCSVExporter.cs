@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+Ôªøusing System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ public static class AGCSVExporter
     {
         using (StreamWriter writer = new StreamWriter(filePath))
         {
-            // «Ï¥ı ¿€º∫
+            // Ìó§Îçî ÏûëÏÑ±
             writer.WriteLine("index,isPractice,startX,startY,endX,endY,duration," +
                              "targetX,targetY,radius,w,Ae,Dx,ID,Axis,Angle,Overshoot,IsError");
 
@@ -16,7 +16,7 @@ public static class AGCSVExporter
             {
                 AGTrialData trial = trials[i];
 
-                // Practice ø©∫Œ
+                // Practice Ïó¨Î∂Ä
                 string isPractice = trial.IsPractice.ToString().ToLower();
 
                 // Start
@@ -34,7 +34,7 @@ public static class AGCSVExporter
                 double targetX = trial.ThisTarget.posR.X;
                 double targetY = trial.ThisTarget.posR.Y;
 
-                // ±‚∫ª ∆ƒ∂ÛπÃ≈Õ
+                // Í∏∞Î≥∏ ÌååÎùºÎØ∏ÌÑ∞
                 double radius = trial.ThisTarget.radius;
                 float w = trial.ThisTarget.w;
                 double ae = trial.GetAe(true);
@@ -45,7 +45,7 @@ public static class AGCSVExporter
                 int overshoot = trial.TargetOvershoots;
                 string isError = trial.IsError.ToString().ToLower();
 
-                // CSV «— ¡Ÿ ¿€º∫
+                // CSV Ìïú Ï§Ñ ÏûëÏÑ±
                 string line = $"{i},{isPractice},{startX:F1},{startY:F1}," +
                               $"{endX:F1},{endY:F1},{duration}," +
                               $"{targetX:F1},{targetY:F1},{radius:F3},{w:F3},{ae:F3},{dx:F3}," +

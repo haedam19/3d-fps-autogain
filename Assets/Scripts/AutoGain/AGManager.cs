@@ -1,4 +1,4 @@
-using MouseLog;
+ï»¿using MouseLog;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -28,28 +28,27 @@ public class AGManager : MonoBehaviour
     #endregion
 
     public enum GameState { Entrance, Standby, InTest, InterTest, Exit }
-    public GameState currentState = GameState.Entrance; // ÇöÀç °ÔÀÓ »óÅÂ
+    public GameState currentState = GameState.Entrance; // í˜„ì¬ ê²Œì„ ìƒíƒœ
 
     public enum GainMode { REFERENCE, AUTOGAIN };
-    public GainMode currentGainMode = GainMode.REFERENCE; // ÇöÀç Gain ¸ğµå
+    public GainMode currentGainMode = GainMode.REFERENCE; // í˜„ì¬ Gain ëª¨ë“œ
 
     [SerializeField] AGTargetGenerator targetGenerator;
     [SerializeField] AGUIManager uiManager;
     [SerializeField] AGMouse agMouse;
-    [SerializeField] AGCurveViewer agCurveViewer;
+    [HideInInspector] public AGViewerClient viewerClient; 
     AutoGain autoGain;
     public static AutoGain AG { get { return Instance.autoGain; } }
 
-    [SerializeField] int practiceTrialCount = 10; // ¿¬½À TrialÀÇ ¼ö (½ÃÀÛ Trial Æ÷ÇÔ)
-    [SerializeField] int totalTrialCount = 300; // ÃÑ TrialÀÇ ¼ö
-
+    [SerializeField] int practiceTrialCount = 10; // ì—°ìŠµ Trialì˜ ìˆ˜ (ì‹œì‘ Trial í¬í•¨)
+    [SerializeField] int totalTrialCount = 300; // ì´ Trialì˜ ìˆ˜
+    
     List<AGTrialData> trials;
     AGTrialData _tdata;
 
+    string continueSource; // ì´ì „ ì‹¤í—˜ê²°ê³¼ì—ì„œ ì´ì–´í•  ê²½ìš° ì´ì–´ ì‹¤í–‰í•  ì‹¤í—˜ê²°ê³¼ í´ë” ì´ë¦„(íƒ€ì„ìŠ¤íƒ¬í”„ í˜•ì‹ìœ¼ë¡œ ëœ ê²ƒ)
     float maxRawSpeed = 0f;
     float minRawSpeed = float.MaxValue;
-
-    private string gameLogfilePath; // °ÔÀÓ ½ÇÇà °ü·Ã ·Î±× ±â·Ï °æ·Î
 
     private void Awake()
     {
@@ -60,12 +59,6 @@ public class AGManager : MonoBehaviour
         }
         instance = this;
 
-#if UNITY_EDITOR
-        gameLogfilePath = Application.dataPath + "/Log";
-#elif UNITY_STANDALONE_WIN
-        gameLogfilePath = Application.persistentDataPath;
-#endif
-
         currentState = GameState.Entrance;
         agMouse.Init();
         agMouse.enabled = false;
@@ -75,7 +68,12 @@ public class AGManager : MonoBehaviour
         uiManager.ShowIndependentVariableSelectionUI();
     }
 
-    /// <summary> AGMouse °´Ã¼¸¦ »ı¼ºÇØ Gain ¸ğµå¸¦ ¼³Á¤ÇÏ°í ½ÇÇèÀ» ½ÃÀÛÇÕ´Ï´Ù. </summary>
+    public void SetContinueSource(string sourceFolderName)
+    {
+        continueSource = string.IsNullOrWhiteSpace(sourceFolderName) ? null : sourceFolderName.Trim();
+    }
+
+    /// <summary> AGMouse ê°ì²´ë¥¼ ìƒì„±í•´ Gain ëª¨ë“œë¥¼ ì„¤ì •í•˜ê³  ì‹¤í—˜ì„ ì‹œì‘í•©ë‹ˆë‹¤. </summary>
     public void SetGainMode(GainMode gainMode)
     {
         currentGainMode = gainMode;
@@ -83,8 +81,10 @@ public class AGManager : MonoBehaviour
 
         if (gainMode == GainMode.AUTOGAIN)
         {
-            autoGain = new AutoGain(3.0);
+            autoGain = new AutoGain(3.0, continueSource);
             agMouse.useAutoGain = true;
+            if (viewerClient != null && viewerClient.IsConnected)
+                SendAGInitDataToViewer();
         }
         else
         {
@@ -116,19 +116,25 @@ public class AGManager : MonoBehaviour
     {
         currentState = GameState.Exit;
         agMouse.enabled = false;
-        string filename = AGCSVExporter.GetTimestampedFilename();
-        string path = Path.Combine(gameLogfilePath, filename);
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string sessionLogPath = Path.Combine(ProjectPaths.AutoGainLogPath, timestamp);
+        Directory.CreateDirectory(sessionLogPath);
+        string filename = $"trial_results_{timestamp}.csv";
+        string csvFullPath = Path.Combine(sessionLogPath, filename);
         try
         {
-            AGCSVExporter.ExportTrialsToCSV(trials, path);
+            AGCSVExporter.ExportTrialsToCSV(trials, csvFullPath);
             if(currentGainMode == GainMode.AUTOGAIN)
-                AG.ExportGainLogs(Path.Combine(gameLogfilePath, "gain_log.csv"));
-            Debug.Log("CSV export success: " + path);
+            {
+                AG.ExportGainLogs(Path.Combine(sessionLogPath, $"gain_log_{timestamp}.csv"));
+                AG.ExportFinalGainData(Path.Combine(sessionLogPath, $"final_gain_data_{timestamp}.json"));
+            }
+            
             uiManager.ShowEndMsgBox();
         }
         catch (System.Exception ex)
         {
-            Debug.LogError("CSV export failed: " + ex.Message);
+            Debug.LogError("Result export failed: " + ex.Message);
         }
     }
 
@@ -146,7 +152,7 @@ public class AGManager : MonoBehaviour
     }
 
     /// <summary>
-    /// AGMouse·ÎºÎÅÍ ¸¶¿ì½º ÀÌµ¿ ÀÌº¥Æ®¸¦ ¹Ş¾Æ Ã³¸®ÇÕ´Ï´Ù.
+    /// AGMouseë¡œë¶€í„° ë§ˆìš°ìŠ¤ ì´ë™ ì´ë²¤íŠ¸ë¥¼ ë°›ì•„ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     /// <param name="move"></param>
     public void MouseMove(MouseMove move, long deltaTimeMs)
@@ -167,13 +173,13 @@ public class AGManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Å×½ºÆ® Áß ¹ß»ıÇÑ Å¬¸¯ ÀÌº¥Æ®¸¦ Ã³¸®ÇÕ´Ï´Ù.
+    /// í…ŒìŠ¤íŠ¸ ì¤‘ ë°œìƒí•œ í´ë¦­ ì´ë²¤íŠ¸ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     /// <param name="pos"></param>
     /// <param name="time"></param>
     public void MouseClick(Vector2 pos, long time)
     {
-        // ºí·Ï ½ÃÀÛÁöÁ¡ ¶Ç´Â ºí·Ï Áß°£¿¡ Å¬¸¯ÀÌ ¹ß»ıÇÑ °æ¿ì¿¡´Â Ã³¸® X
+        // ë¸”ë¡ ì‹œì‘ì§€ì  ë˜ëŠ” ë¸”ë¡ ì¤‘ê°„ì— í´ë¦­ì´ ë°œìƒí•œ ê²½ìš°ì—ëŠ” ì²˜ë¦¬ X
         if (currentState != GameState.Standby && currentState != GameState.InTest)
             return;
 
@@ -186,7 +192,7 @@ public class AGManager : MonoBehaviour
     void NextTrial(TimePointR click)
     {
 
-        if (currentState == GameState.Standby) // ½ÃÀÛ trialÀÎ °æ¿ì
+        if (currentState == GameState.Standby) // ì‹œì‘ trialì¸ ê²½ìš°
         {
             if (!_tdata.TargetContains((PointR)click)) // click missed start target
             {
@@ -198,7 +204,7 @@ public class AGManager : MonoBehaviour
 
                 AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
                 if (nextAGTargetData.IsEmpty())
-                    StopTest(true); // Å¸°Ù »ı¼º ½ÇÆĞ ½Ã Å×½ºÆ® Á¤Áö
+                    StopTest(true); // íƒ€ê²Ÿ ìƒì„± ì‹¤íŒ¨ ì‹œ í…ŒìŠ¤íŠ¸ ì •ì§€
                 else
                 {
                     _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, lastTrial.ThisTarget, nextAGTargetData);
@@ -218,13 +224,26 @@ public class AGManager : MonoBehaviour
             uiManager.UpdateStatusHUD(trials.Count, totalTrialCount, _tdata);
             if(currentGainMode == GainMode.AUTOGAIN)
             {
-                AG.UpdateGainCurve(_tdata);
-                agCurveViewer.UpdateCurveView();
+                AG.UpdateGainCurve(_tdata, out bool gainUpdated, out bool snapshotRecorded);
+
+                if (viewerClient != null && viewerClient.IsConnected && gainUpdated)
+                {
+                    FullGainCurve gainData = AG.GetFullGainCurveJsonData();
+                    string gainDataJson = JsonUtility.ToJson(gainData);
+                    _ = viewerClient.SendTextAsync(gainDataJson);
+
+                    if (snapshotRecorded)
+                    {
+                        GainSnapshot gainSnapshot = AG.GetLastGainSnapshotJsonData();
+                        string gainSnapshotJson = JsonUtility.ToJson(gainSnapshot);
+                        _ = viewerClient.SendTextAsync(gainSnapshotJson);
+                    }
+                }
             }
             if (_tdata.IsError)
                 DoError();
 
-            if (trials.Count >= totalTrialCount) // ¸ğµç TrialÀÌ ³¡³­ °æ¿ì
+            if (trials.Count >= totalTrialCount) // ëª¨ë“  Trialì´ ëë‚œ ê²½ìš°
             {
                 FinishTest();
                 return;
@@ -232,7 +251,7 @@ public class AGManager : MonoBehaviour
 
             AGTargetData nextAGTargetData = targetGenerator.GenerateNextTarget();
             if (nextAGTargetData.IsEmpty())
-                StopTest(true); // Å¸°Ù »ı¼º ½ÇÆĞ ½Ã Å×½ºÆ® Á¤Áö
+                StopTest(true); // íƒ€ê²Ÿ ìƒì„± ì‹¤íŒ¨ ì‹œ í…ŒìŠ¤íŠ¸ ì •ì§€
             else
             {
                 _tdata = new AGTrialData(trials.Count, trials.Count < practiceTrialCount, trials[trials.Count - 1].ThisTarget, nextAGTargetData);
@@ -242,6 +261,25 @@ public class AGManager : MonoBehaviour
             }
             
         }
+    }
+
+    /// <summary>
+    /// AutoGainì˜ ì´ˆê¸° ë°ì´í„°ë¥¼ Viewerì— ì „ì†¡í•©ë‹ˆë‹¤.
+    /// </summary>
+    private async void SendAGInitDataToViewer()
+    {
+        if (viewerClient == null || !viewerClient.IsConnected || AG == null)
+            return;
+
+        MetaData metaData = AG.GetMetaData();
+        await viewerClient.SendTextAsync(JsonUtility.ToJson(metaData));
+
+        FullGainCurve gainData = AG.GetFullGainCurveJsonData();
+        await viewerClient.SendTextAsync(JsonUtility.ToJson(gainData));
+
+        List<GainSnapshot> snapshots = AG.GetGainSnapshotJsonDataList();
+        foreach (GainSnapshot snapshot in snapshots)
+            await viewerClient.SendTextAsync(JsonUtility.ToJson(snapshot));
     }
 
     private void DoError()

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3D AutoGain Viewer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="shell mainShell">
+        <header class="topbar">
+            <div>
+                <h1>3D AutoGain Viewer</h1>
+                <p id="connectionText">Viewer disconnected</p>
+            </div>
+            <a class="textLink" href="/viewer/log">Log</a>
+        </header>
+
+        <section class="chartPanel" aria-label="Gain curve graph">
+            <canvas id="gainChart" width="1200" height="600"></canvas>
+        </section>
+
+        <section class="tablePanel" aria-label="Current gain curve table">
+            <div class="tableHeader">
+                <span id="tableTitle">Current Gain Curve</span>
+                <span id="updateText">Waiting for data</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bin Index</th>
+                        <th>Bin Range</th>
+                        <th>Gain</th>
+                        <th>Update Count</th>
+                    </tr>
+                </thead>
+                <tbody id="gainTableBody">
+                    <tr>
+                        <td colspan="4" class="emptyCell">No gain curve data received.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="/static/main.js"></script>
+</body>
+</html>

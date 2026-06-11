@@ -1,4 +1,4 @@
-/**
+﻿/**
  * FittsStudy
  *
  *		Jacob O. Wobbrock, Ph.D.

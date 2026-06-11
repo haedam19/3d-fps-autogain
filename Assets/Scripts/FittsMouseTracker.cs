@@ -129,13 +129,13 @@ public class FittsMouseTracker : MonoBehaviour
         if (unitTest || sensitivitySettingPhase ) return;
 
         if (_delta.sqrMagnitude > 0)
-            GameManager3D.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, _curTime));
+            FittsManager.Instance.MouseMove(new MouseMove(_delta, _lastPos, _currentPos, _curTime));
 
         if (_isClicked)
         {
             RaycastHit hitInfo;
             bool hit = Physics.Raycast(transform.position, transform.forward, out hitInfo, 1e3f, LayerMask.NameToLayer("Target"));
-            GameManager3D.Instance.MouseClick(_currentPos, _curTime, hit, hitInfo);
+            FittsManager.Instance.MouseClick(_currentPos, _curTime, hit, hitInfo);
         }
     }
 }

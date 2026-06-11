@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Drawing;
 using System.IO;
 
@@ -206,7 +206,7 @@ public static class StringEx
         return name;
     }
 
-    // RandomEx¿¡¼­ °¡Á®¿È.
+    // RandomExì—ì„œ ê°€ì ¸ì˜´.
     public static string RandomString(int minlen, int maxlen)
     {
         int num = UnityEngine.Random.Range(minlen, maxlen + 1);

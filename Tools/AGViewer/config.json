@@ -1,0 +1,21 @@
+{
+    "maxSnapshotCount": 15,
+    "latestSnapshotGraphHsv": {
+        "h": 120,
+        "s": 100,
+        "v": 100
+    },
+    "oldestSnapshotGraphHsv": {
+        "h": 0,
+        "s": 100,
+        "v": 100
+    },
+    "currentGainCurveGraphRgb": {
+        "r": 0,
+        "g": 190,
+        "b": 255
+    },
+    "currentGainLineWidth": 4,
+    "snapshotGainLineWidth": 2,
+    "keepReceivedMessages": true
+}

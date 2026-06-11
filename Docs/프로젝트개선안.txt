@@ -1,0 +1,22 @@
+<프로젝트의 최종 목표>
+현재의 최적화 방법으로는 gain curve 사용자가 편하게 쓸 수 있는 형태에 수렴하지 않는다.
+어느 시점까지는 target acquisition 속도와 정확도가 향상되나 어느 순간부터 오히려 점점 사용하기 불편해지는 문제가 있다.
+따라서 사용자가 편하게 사용할 수 있는 상태로 더 잘 수렴하도록 gain curve 최적화 로직을 개선한다.
+
+<단기적 문제 상황>
+원인 파악과 개선 아이디어를 내야 하는데 gain curve의 변화 양상을 확인하기 쉽지 않다.
+구체적인 문제는 다음과 같다.
+- 실시간으로 gain function의 변화를 확인하려면 유니티 에디터에서 AGCurveViewer 컴포넌트를 통해 인스펙터로 확인하는 수밖에 없다.
+- 빌드 버전에서는 gain function의 변화를 실시간으로 확인하는 것이 불가능하다.
+- gain log는 csv 형태로 저장되므로 시각화가 잘 되지 않는다.
+
+<아이디어>
+- AutoGain 프로그램으로부터 gain curve 데이터를 실시간으로 받아 시각화하는 프로그램을 제작한다.
+- 해당 프로그램은 3D AutoGain Viewer라고 부른다.
+- 프로그램은 속도 구간별 gain 값을 시각화한 꺾은선 그래프와 원본 데이터 표(1열: 속도 구간, 2열: gain 값)를 웹 브라우져를 통해 표시한다.
+- 유니티로 만든 현재 프로그램(3D FPS AutoGain)과 이 시각화 프로그램은 서로 소통할 수 있어야 한다. AutoGain과 뷰어를 모두 실행하고 뷰어의 실시간 표시 모드를 실핸한다. 3D AutoGain Lobby 씬에 Connect 버튼 만든다. Connect 버튼을 누르면 3D AutoGain이 Viewer와 통신을 시도하고 연결이 성공하면 성공여부가 뜬다.
+- 3D Auto Gain Lobby 씬과 3D Auto Gain 씬 우측 최하단에 작게 AutoGain Viewer 연결 여부가 표시된다.
+- Viewer는 3D AutoGain과 연결 중일시 자기 자신이 종료될 때 3D AutoGain에 자신이 종료됨을 알리는 신호를 보내 3D AutoGain이 이미 꺼진 Viewer에 신호를 보내는 것을 막을 수 있어야 한다.
+- 3D Auto Gain 씬에서 시작할 때 Viewer에 gain curve 전체 초기값을 보내고 viewer는 이 데이터로 전체 그래프와 표를 초기화한다.
+- 매 Trial마다 viwer에 어떤 speed bin의 값이 무엇으로 변했는지 viewer에 전달하고 viewer는 그래프와 표를 업데이트한다.
+- 실시간 표시 모드 외에 이미 기록된 로그를 바탕으로 표시하는 기능도 추가한다.

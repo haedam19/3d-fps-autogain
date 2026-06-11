@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -8,13 +8,13 @@ using System.Xml;
 using MouseLog;
 using UnityEngine;
 
-public class GameManager3D : MonoBehaviour
+public class FittsManager : MonoBehaviour
 {
     private const double MinDblClickDist = 4.0; // minimum distance two clicks must be apart (filters double-clicks)
 
     #region Singleton Instance
-    static GameManager3D instance;
-    public static GameManager3D Instance
+    static FittsManager instance;
+    public static FittsManager Instance
     {
         get
         {
@@ -27,17 +27,15 @@ public class GameManager3D : MonoBehaviour
     #endregion
 
     public enum GameState {
-        InterCondition, // ÃøÁ¤ ÁßÀÌ ¾Æ´Ñ »óÅÂ
-        StartTrial,     // Start Trial ÀÔ·Â ´ë±â Áß
-        Measuring       // Condition ³»¿¡¼­ ÃøÁ¤ ½ÃÇà Áß
+        InterCondition, // ì¸¡ì • ì¤‘ì´ ì•„ë‹Œ ìƒíƒœ
+        StartTrial,     // Start Trial ì…ë ¥ ëŒ€ê¸° ì¤‘
+        Measuring       // Condition ë‚´ì—ì„œ ì¸¡ì • ì‹œí–‰ ì¤‘
     }
 
-    [SerializeField] private GameState currentState; // ÇöÀç °ÔÀÓ »óÅÂ
-
-    private string gameLogfilePath; // °ÔÀÓ ½ÇÇà °ü·Ã ·Î±× ±â·Ï °æ·Î
+    [SerializeField] private GameState currentState; // í˜„ì¬ ê²Œì„ ìƒíƒœ
 
     [Header("SubSystems")]
-    public TargetManager3D targetManager;
+    public FittsTargetManager3D targetManager;
     public UIManager3D uiManager;
     public FittsMouseTracker mouseTracker;
 
@@ -55,7 +53,7 @@ public class GameManager3D : MonoBehaviour
     #endregion
 
     #region file
-    public bool expComplete; // ÃøÁ¤ÀÌ ³¡±îÁö ÁøÇàµÇ¾ú´ÂÁö Ã¼Å©
+    public bool expComplete; // ì¸¡ì •ì´ ëê¹Œì§€ ì§„í–‰ë˜ì—ˆëŠ”ì§€ ì²´í¬
     private string _fileNoExt; // full path and filename without extension
     private XmlTextWriter _writer; // XML writer -- uses _fileNoExt.xml
 
@@ -75,28 +73,24 @@ public class GameManager3D : MonoBehaviour
         uiManager.Init();
         targetManager.Init();
 
-        // ·Î±× ÆÄÀÏ °æ·Î ¹× ÀÌ¸§ ¼³Á¤ & xml ·Î±× ÁØºñ
-#if UNITY_EDITOR
-        gameLogfilePath = Application.dataPath + "/Log";
-#elif UNITY_STANDALONE_WIN
-        gameLogfilePath = Application.persistentDataPath;
-#endif
-        //session_onfig.json ·Îµå -> _sdata, _cdata, _tdata ÃÊ±âÈ­
+        Directory.CreateDirectory(ProjectPaths.FittsLogPath);
+
+        //session_onfig.json ë¡œë“œ -> _sdata, _cdata, _tdata ì´ˆê¸°í™”
         SessionConfiguration sessionconfig = LoadData();
 
-        // ³²¾ÆÀÖ´Â .tmp ÆÄÀÏ ÀÖÀ¸¸é Á¤¸®. (ÀÌÀü ½ÇÇà Áß¿¡ ºñÁ¤»ó Á¾·áµÇ¾î ³²¾ÆÀÖ´Â ÆÄÀÏ)
-        string leftoverTmp = Directory.GetFiles(gameLogfilePath, "*.tmp").FirstOrDefault();
+        // ë‚¨ì•„ìˆëŠ” .tmp íŒŒì¼ ìˆìœ¼ë©´ ì •ë¦¬. (ì´ì „ ì‹¤í–‰ ì¤‘ì— ë¹„ì •ìƒ ì¢…ë£Œë˜ì–´ ë‚¨ì•„ìˆëŠ” íŒŒì¼)
+        string leftoverTmp = Directory.GetFiles(ProjectPaths.FittsLogPath, "*.tmp").FirstOrDefault();
         if (leftoverTmp != null)
             File.Delete(leftoverTmp);
 
         // FilenameBase: s{subject id}_{1D / 2D}_{mnone / nomet}
-        _fileNoExt = string.Format("{0}\\{1}__{2}", gameLogfilePath, _sdata.FilenameBase, Environment.TickCount);
-        _writer = new XmlTextWriter(_fileNoExt + ".tmp", Encoding.UTF8); // Ã³À½¿£ .tmp·Î ÀúÀå. ÃøÁ¤ÀÌ Á¤»óÀûÀ¸·Î Á¾·áµÇ¾úÀ» ¶§¸¸ .xml·Î º¯°æ
+        _fileNoExt = string.Format("{0}\\{1}__{2}", ProjectPaths.FittsLogPath, _sdata.FilenameBase, Environment.TickCount);
+        _writer = new XmlTextWriter(_fileNoExt + ".tmp", Encoding.UTF8); // ì²˜ìŒì—” .tmpë¡œ ì €ì¥. ì¸¡ì •ì´ ì •ìƒì ìœ¼ë¡œ ì¢…ë£Œë˜ì—ˆì„ ë•Œë§Œ .xmlë¡œ ë³€ê²½
         _writer.Formatting = Formatting.Indented;
         _sdata.WriteXmlHeader(_writer);
         expComplete = false;
 
-        // Å¸ÀÌ¸Ó ÃÊ±âÈ­
+        // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
         Timer.Reset();
 
         mouseTracker.Init();
@@ -109,10 +103,10 @@ public class GameManager3D : MonoBehaviour
 
     public void TestStart()
     {
-        targetManager.SetActiveCondition(0); // Ã¹ ¹øÂ° ConditionÀÇ Å¸°Ù ¼¼ÆÃ
-        _tdata.ThisTarget.TargetOn(); // Ã¹ ¹øÂ° Å¸°Ù ÄÑ±â
-        currentState = GameState.StartTrial; // »óÅÂ º¯°æ
-        mouseTracker.enabled = true; // ¸¶¿ì½º Æ®·¡Ä¿ È°¼ºÈ­
+        targetManager.SetActiveCondition(0); // ì²« ë²ˆì§¸ Conditionì˜ íƒ€ê²Ÿ ì„¸íŒ…
+        _tdata.ThisTarget.TargetOn(); // ì²« ë²ˆì§¸ íƒ€ê²Ÿ ì¼œê¸°
+        currentState = GameState.StartTrial; // ìƒíƒœ ë³€ê²½
+        mouseTracker.enabled = true; // ë§ˆìš°ìŠ¤ íŠ¸ë˜ì»¤ í™œì„±í™”
     }
 
     #region Mouse Event Handling
@@ -127,13 +121,13 @@ public class GameManager3D : MonoBehaviour
         if (_cdata == null || currentState == GameState.InterCondition)
             return;
 
-        // TimePointR·Î º¯È¯ÇÏ¸é¼­ ÁÂ»ó´Ü ¿øÁ¡ ÁÂÇ¥°è·Î º¯È¯
+        // TimePointRë¡œ ë³€í™˜í•˜ë©´ì„œ ì¢Œìƒë‹¨ ì›ì  ì¢Œí‘œê³„ë¡œ ë³€í™˜
         TimePointR clickTimePos = new TimePointR((PointR)(pos + new Vector2(Screen.width / 2, Screen.height / 2)), time);
 
         // Debug.Log("Click: " + $"{clickTimePos.X}, {clickTimePos.Y}");
         // Debug.Log($"{_tdata.ThisTarget.CenterP.X}, {_tdata.ThisTarget.CenterP.Y}");
 
-        // ½ÃÀÛ TrialÀÌ¸é ¹Ù·Î NextTrial È£Ãâ, ¾Æ´Ò °æ¿ì¿£ ´õºíÅ¬¸¯ ¹æÁö ¿¬»ê ¼öÇà ÈÄ NextTrial È£Ãâ
+        // ì‹œì‘ Trialì´ë©´ ë°”ë¡œ NextTrial í˜¸ì¶œ, ì•„ë‹ ê²½ìš°ì—” ë”ë¸”í´ë¦­ ë°©ì§€ ì—°ì‚° ìˆ˜í–‰ í›„ NextTrial í˜¸ì¶œ
         if (_tdata.IsStartAreaTrial || PointR.Distance((PointR)_tdata.Start, (PointR)clickTimePos) > MinDblClickDist)
             NextTrial(clickTimePos, rayHitFlag, hitInfo);
     }
@@ -153,7 +147,7 @@ public class GameManager3D : MonoBehaviour
 
     void NextTrial(TimePointR click, bool rayHitFlag, RaycastHit hitInfo)
     {
-        if (_tdata.IsStartAreaTrial) // ½ÃÀÛ trialÀÎ °æ¿ì
+        if (_tdata.IsStartAreaTrial) // ì‹œì‘ trialì¸ ê²½ìš°
         {
             if (!_tdata.TargetContains((PointR)click)) // click missed start target
             {
@@ -162,13 +156,13 @@ public class GameManager3D : MonoBehaviour
             else // start first actual trial
             {
                 _tdata = _cdata[1]; // trial number 1
-                _tdata.LastTarget.TargetOff(); // Áö³­ Å¸°Ù ²¨Áü
-                _tdata.ThisTarget.TargetOn(); // ÇöÀç Å¸°Ù ÄÑÁü
-                _tdata.Start = click; // ½ÃÀÛ ÁÂÇ¥ ¹× ½Ã°£ ±â·Ï
-                currentState = GameState.Measuring; // »óÅÂ º¯°æ
+                _tdata.LastTarget.TargetOff(); // ì§€ë‚œ íƒ€ê²Ÿ êº¼ì§
+                _tdata.ThisTarget.TargetOn(); // í˜„ì¬ íƒ€ê²Ÿ ì¼œì§
+                _tdata.Start = click; // ì‹œì‘ ì¢Œí‘œ ë° ì‹œê°„ ê¸°ë¡
+                currentState = GameState.Measuring; // ìƒíƒœ ë³€ê²½
             }
         }
-        else if (_tdata.Number < _cdata.NumTrials) // µ¿ÀÏ condition ³» ´ÙÀ½ trial·Î ÁøÇà
+        else if (_tdata.Number < _cdata.NumTrials) // ë™ì¼ condition ë‚´ ë‹¤ìŒ trialë¡œ ì§„í–‰
         {
             _tdata.End = click;
             _tdata.NormalizeTimes();
@@ -176,11 +170,11 @@ public class GameManager3D : MonoBehaviour
                 DoError();
 
             _tdata = _cdata[_tdata.Number + 1];
-            _tdata.LastTarget.TargetOff(); // Áö³­ Å¸°Ù ²¨Áü
-            _tdata.ThisTarget.TargetOn(); // ÇöÀç Å¸°Ù ÄÑÁü
-            _tdata.Start = click; // ½ÃÀÛ ÁÂÇ¥ ¹× ½Ã°£ ±â·Ï
+            _tdata.LastTarget.TargetOff(); // ì§€ë‚œ íƒ€ê²Ÿ êº¼ì§
+            _tdata.ThisTarget.TargetOn(); // í˜„ì¬ íƒ€ê²Ÿ ì¼œì§
+            _tdata.Start = click; // ì‹œì‘ ì¢Œí‘œ ë° ì‹œê°„ ê¸°ë¡
         }
-        else // Condition Á¾·á. 
+        else // Condition ì¢…ë£Œ. 
         {
             _tdata.End = click;
             _tdata.NormalizeTimes();
@@ -189,29 +183,29 @@ public class GameManager3D : MonoBehaviour
 
             _cdata.WriteXmlHeader(_writer); // write out the condition and its trials to XML
             currentState = GameState.InterCondition;
-            mouseTracker.enabled = false; // ¸¶¿ì½º Æ®·¡Ä¿ ºñÈ°¼ºÈ­
+            mouseTracker.enabled = false; // ë§ˆìš°ìŠ¤ íŠ¸ë˜ì»¤ ë¹„í™œì„±í™”
             UIManager3D.Instance.ShowConditionEndMsgBox(_cdata.Index + 1, _sdata.NumTotalConditions);
         }
     }
 
     public void NextCondition()
     {
-        //´ÙÀ½ ConditionÀ¸·Î ³Ñ¾î°¡°Å³ª Session Á¾·á.
-        if (_cdata.Index + 1 == _sdata.NumTotalConditions) // ¸¶Áö¸· ConditionÀÎ °æ¿ì
+        //ë‹¤ìŒ Conditionìœ¼ë¡œ ë„˜ì–´ê°€ê±°ë‚˜ Session ì¢…ë£Œ.
+        if (_cdata.Index + 1 == _sdata.NumTotalConditions) // ë§ˆì§€ë§‰ Conditionì¸ ê²½ìš°
         {
-            // Session Á¾·á
+            // Session ì¢…ë£Œ
             _sdata.WriteXmlFooter(_writer);
-            expComplete = true; // ÃøÁ¤ ¿Ï·á
+            expComplete = true; // ì¸¡ì • ì™„ë£Œ
             UIManager3D.Instance.ShowSessionEndMsgBox();
         }
-        else // ´ÙÀ½ ConditionÀ¸·Î ³Ñ¾î°¨
+        else // ë‹¤ìŒ Conditionìœ¼ë¡œ ë„˜ì–´ê°
         {
             currentState = GameState.StartTrial;
             mouseTracker.enabled = true;
             _cdata = _sdata[ _cdata.Index + 1];
             _tdata = _cdata[0];
-            targetManager.SetActiveCondition(_cdata.Index); // Å¸°Ù ¸Å´ÏÀú¿¡ ÇöÀç Condition ¼³Á¤
-            _tdata.ThisTarget.TargetOn(); // Ã¹ ¹øÂ° Å¸°Ù ÄÑ±â
+            targetManager.SetActiveCondition(_cdata.Index); // íƒ€ê²Ÿ ë§¤ë‹ˆì €ì— í˜„ì¬ Condition ì„¤ì •
+            _tdata.ThisTarget.TargetOn(); // ì²« ë²ˆì§¸ íƒ€ê²Ÿ ì¼œê¸°
         }
     }
 
@@ -222,12 +216,12 @@ public class GameManager3D : MonoBehaviour
         // TODO: IMPLEMENT
     }
 
-    /// <summary> config.jsonÀ» ÀĞ¾î session ¼¼ÆÃ. ½ÇÆĞÇÏ¸é ÇÁ·Î±×·¥ Á¾·á. </summary>
+    /// <summary> config.jsonì„ ì½ì–´ session ì„¸íŒ…. ì‹¤íŒ¨í•˜ë©´ í”„ë¡œê·¸ë¨ ì¢…ë£Œ. </summary>
     private SessionConfiguration LoadData()
     {
         SessionConfiguration sessionConfig = null;
         string json = null;
-        json = File.ReadAllText(Path.Combine(Application.dataPath, "Json", "session_config.json"));
+        json = File.ReadAllText(Path.Combine(ProjectPaths.ConfigPath, "fitts_session_config.json"));
         string fileName = string.Format("ConfigLoadLog_{0}_{1}.txt", DateTime.Now.ToString("yyyy-MM-dd"), Environment.TickCount);
 
         if (json != null)
@@ -235,25 +229,25 @@ public class GameManager3D : MonoBehaviour
             sessionConfig = JsonUtility.FromJson<SessionConfiguration>(json);
             if (sessionConfig.isValid())
             {
-                // config ÀÌ¿ëÇØ SessionData, ConditionData, TrialData ÃÊ±âÈ­
+                // config ì´ìš©í•´ SessionData, ConditionData, TrialData ì´ˆê¸°í™”
                 _sdata = new SessionData(sessionConfig.subject, sessionConfig.isCircular, new ScreenData(Screen.width, Screen.height), sessionConfig.a, sessionConfig.w, null, 100.0, 200.0, sessionConfig.trials, sessionConfig.practice);
                 _cdata = _sdata[0]; // first overall condition
                 _tdata = _cdata[0]; // first trial is special start-area trial at index 0
                 totalTrialCount = sessionConfig.trials;
-                using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                using (StreamWriter sw = new StreamWriter(Path.Combine(ProjectPaths.FittsLogPath, fileName), true))
                     sw.WriteLine(json);
 
             }
             else
             {
-                using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+                using (StreamWriter sw = new StreamWriter(Path.Combine(ProjectPaths.FittsLogPath, fileName), true))
                     sw.WriteLine("Invalid config");
                 Application.Quit();
             }
         }
         else
         {
-            using (StreamWriter sw = new StreamWriter(Path.Combine(gameLogfilePath, fileName), true))
+            using (StreamWriter sw = new StreamWriter(Path.Combine(ProjectPaths.FittsLogPath, fileName), true))
                 sw.WriteLine("Failed to load session_config.json");
             Application.Quit();
         }
@@ -263,7 +257,7 @@ public class GameManager3D : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        // ÃøÁ¤ÀÌ Á¦´ë·Î ¿Ï·á µÇ¾ú´Ù¸é ¾Û Á¾·á½Ã .tmp·Î ÀúÀåµÈ ±â·ÏÀ» xml·Î ¿Å±â°í .tmp´Â Á¤¸®
+        // ì¸¡ì •ì´ ì œëŒ€ë¡œ ì™„ë£Œ ë˜ì—ˆë‹¤ë©´ ì•± ì¢…ë£Œì‹œ .tmpë¡œ ì €ì¥ëœ ê¸°ë¡ì„ xmlë¡œ ì˜®ê¸°ê³  .tmpëŠ” ì •ë¦¬
         if (expComplete)
             FinalizeXmlWriter();
     }
@@ -277,12 +271,15 @@ public class GameManager3D : MonoBehaviour
                 string tmpPath = _fileNoExt + ".tmp";
                 string finalPath = _fileNoExt + ".xml";
 
+                _writer.Flush();
+                _writer.Close();
+
                 if (File.Exists(tmpPath))
                     File.Move(tmpPath, finalPath); // rename only if fully completed
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("XML Á¤¸® Áß ¿À·ù: " + ex.Message);
+                Debug.LogWarning("XML ì •ë¦¬ ì¤‘ ì˜¤ë¥˜: " + ex.Message);
             }
             finally
             {

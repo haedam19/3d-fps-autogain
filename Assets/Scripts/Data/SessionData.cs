@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * FittsStudy
  *
  *		Jacob O. Wobbrock, Ph.D.
@@ -99,13 +99,13 @@ namespace MouseLog
             List<ConditionConfig> conditions = CreateConditionSequence(true);
             for (int i = 0; i < conditions.Count; i++)
             {
-                // 0¹ø ºí·Ï, i¹ø ÀÎµ¦½º, coondition = (A, W), ¸ŞÆ®·Î³ğ °ü·Ã °ªµéÀº -1
-                // ÃÑ½ÃÇà È½¼ö trials, ¿¬½À È½¼ö practice, circular ¿©ºÎ(Ç×»ó true)
+                // 0ë²ˆ ë¸”ë¡, ië²ˆ ì¸ë±ìŠ¤, coondition = (A, W), ë©”íŠ¸ë¡œë†ˆ ê´€ë ¨ ê°’ë“¤ì€ -1
+                // ì´ì‹œí–‰ íšŸìˆ˜ trials, ì—°ìŠµ íšŸìˆ˜ practice, circular ì—¬ë¶€(í•­ìƒ true)
                 ConditionData cond = new ConditionData(0, i, conditions[i].A, conditions[i].W, -1.0, -1L, trials, practice, circular);
                 _conditions.Add(cond);
             }
 
-            // ÀüÃ¼ ¹İº¹ ¼öÀÎ blockÀº ±¸ÇöÇÏÁö ¾ÊÀ½. ½ÇÇè ÀÚÃ¼¸¦ µ¿ÀÏ Á¶°Ç ÇÏ¿¡¼­ ¿©·¯ ¹ø ÇÏ´Â °ÍÀ¸·Î ´ëÃ¼. 
+            // ì „ì²´ ë°˜ë³µ ìˆ˜ì¸ blockì€ êµ¬í˜„í•˜ì§€ ì•ŠìŒ. ì‹¤í—˜ ìì²´ë¥¼ ë™ì¼ ì¡°ê±´ í•˜ì—ì„œ ì—¬ëŸ¬ ë²ˆ í•˜ëŠ” ê²ƒìœ¼ë¡œ ëŒ€ì²´. 
         }
 
         #endregion
@@ -373,8 +373,8 @@ namespace MouseLog
             }
         }
 
-        /// <summary> _a, _w¿¡¼­ ÇÏ³ª¾¿ ¼±ÅÃÇØ ½ÇÇè Á¶°Ç Á¶ÇÕÀ» »ı¼ºÇÕ´Ï´Ù. </summary> 
-        /// <returns> ConditionCOnfig ¸®½ºÆ®°¡ ¹İÈ¯µË´Ï´Ù. ÇÑ °³¾¿ ¼øÈ¸ÇÏ¸ç ConditionData »ı¼º¿¡ »ç¿ëÇÕ´Ï´Ù. </returns>
+        /// <summary> _a, _wì—ì„œ í•˜ë‚˜ì”© ì„ íƒí•´ ì‹¤í—˜ ì¡°ê±´ ì¡°í•©ì„ ìƒì„±í•©ë‹ˆë‹¤. </summary> 
+        /// <returns> ConditionCOnfig ë¦¬ìŠ¤íŠ¸ê°€ ë°˜í™˜ë©ë‹ˆë‹¤. í•œ ê°œì”© ìˆœíšŒí•˜ë©° ConditionData ìƒì„±ì— ì‚¬ìš©í•©ë‹ˆë‹¤. </returns>
         public List<ConditionConfig> CreateConditionSequence(bool shuffle)
         {
             List<ConditionConfig> conditionList = new List<ConditionConfig>();
@@ -404,15 +404,15 @@ namespace MouseLog
 
         public static int[] ShuffleArray(int[] inputArray)
         {
-            // ¹è¿­ º¹»ç (¿øº»À» º¯°æÇÏÁö ¾Ê±â À§ÇØ)
+            // ë°°ì—´ ë³µì‚¬ (ì›ë³¸ì„ ë³€ê²½í•˜ì§€ ì•Šê¸° ìœ„í•´)
             int[] shuffled = (int[])inputArray.Clone();
             System.Random rand = new System.Random();
 
-            // Fisher-Yates ¼ÅÇÃ ¾Ë°í¸®Áò
+            // Fisher-Yates ì…”í”Œ ì•Œê³ ë¦¬ì¦˜
             for (int i = shuffled.Length - 1; i > 0; i--)
             {
                 int j = rand.Next(0, i + 1);
-                // °ª ±³È¯
+                // ê°’ êµí™˜
                 int temp = shuffled[i];
                 shuffled[i] = shuffled[j];
                 shuffled[j] = temp;
@@ -581,7 +581,7 @@ namespace MouseLog
                 _w = StringEx.String2IntArray(reader.GetAttribute("W"));
                 _intercept = XmlConvert.ToDouble(reader.GetAttribute("intercept"));
                 _slope = XmlConvert.ToDouble(reader.GetAttribute("slope"));
-                //_screen = ScreenData.FromString(reader.GetAttribute("screen")); // saved for zoom feature <<< ³ªÁß¿¡ ±¸Çö ¿Ï·á
+                //_screen = ScreenData.FromString(reader.GetAttribute("screen")); // saved for zoom feature <<< ë‚˜ì¤‘ì— êµ¬í˜„ ì™„ë£Œ
 
                 // read the conditions and add condition objects to the session. the
                 // conditions will be responsible for reading their individual trials.

@@ -1,12 +1,12 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
 /// <summary>
-/// <para> °íÇØ»óµµ Å¸ÀÌ¸ÓÀÔ´Ï´Ù. </para>
-/// <para> Time ÇÁ·ÎÆÛÆ¼¸¦ ÅëÇØ ÃÖÃÊ È£Ãâ ¶Ç´Â ÃÖ±Ù Reset ÈÄ °æ°úµÈ ½Ã°£À» ¾òÀ» ¼ö ÀÖ½À´Ï´Ù.</para>
+/// <para> ê³ í•´ìƒë„ íƒ€ì´ë¨¸ì…ë‹ˆë‹¤. </para>
+/// <para> Time í”„ë¡œí¼í‹°ë¥¼ í†µí•´ ìµœì´ˆ í˜¸ì¶œ ë˜ëŠ” ìµœê·¼ Reset í›„ ê²½ê³¼ëœ ì‹œê°„ì„ ì–»ì„ ìˆ˜ ìˆìŠµë‹ˆë‹¤.</para>
 /// </summary>
 public class Timer
 {
@@ -28,24 +28,24 @@ public class Timer
         }
     }
 
-    private long _freq; // ÃÊ´ç count È½¼ö
-    private long _counter; // Time ÃøÁ¤ÇÏ´Â ¼ø°£ÀÇ counter °ª
-    private long _startCounter; // Timer ¸®¼Â ¼ø°£ÀÇ counter °ª
+    private long _freq; // ì´ˆë‹¹ count íšŸìˆ˜
+    private long _counter; // Time ì¸¡ì •í•˜ëŠ” ìˆœê°„ì˜ counter ê°’
+    private long _startCounter; // Timer ë¦¬ì…‹ ìˆœê°„ì˜ counter ê°’
 
     private Timer()
     {
-        // instance »ı¼º½Ã ÀÚµ¿ ¸®¼Â 1È¸ ½ÃÇà
+        // instance ìƒì„±ì‹œ ìë™ ë¦¬ì…‹ 1íšŒ ì‹œí–‰
         QueryPerformanceFrequency(out _freq);
         QueryPerformanceCounter(out _startCounter);
     }
 
-    /// <summary> Å¸ÀÌ¸Ó¸¦ ¸®¼ÂÇÕ´Ï´Ù. </summary>
+    /// <summary> íƒ€ì´ë¨¸ë¥¼ ë¦¬ì…‹í•©ë‹ˆë‹¤. </summary>
     public static void Reset()
     {
         QueryPerformanceCounter(out Instance._startCounter);
     }
 
-    /// <summary> Å¸ÀÌ¸Ó°¡ ¸®¼ÂµÈ ÀÌÈÄ °æ°úµÈ ½Ã°£À» ms ´ÜÀ§·Î ¹İÈ¯ÇÕ´Ï´Ù. </summary>
+    /// <summary> íƒ€ì´ë¨¸ê°€ ë¦¬ì…‹ëœ ì´í›„ ê²½ê³¼ëœ ì‹œê°„ì„ ms ë‹¨ìœ„ë¡œ ë°˜í™˜í•©ë‹ˆë‹¤. </summary>
     public static long Time
     {
         get

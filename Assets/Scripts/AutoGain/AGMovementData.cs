@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * FittsStudy
  *
  *		Jacob O. Wobbrock, Ph.D.
@@ -218,7 +218,7 @@ public class AGMovementData
 
     public void AddRawSpeed(TimePointR speedPt)
     {
-        // AddMove¿Í °°Àº ¹æ½ÄÀ¸·Î, ¸¶Áö¸· »ùÇÃ°ú Å¸ÀÓ½ºÅÆÇÁ°¡ °°À¸¸é ±³Ã¼
+        // AddMoveì™€ ê°™ì€ ë°©ì‹ìœ¼ë¡œ, ë§ˆì§€ë§‰ ìƒ˜í”Œê³¼ íƒ€ì„ìŠ¤íƒ¬í”„ê°€ ê°™ìœ¼ë©´ êµì²´
         if (_rawSpeeds.Count > 0 && _rawSpeeds[_rawSpeeds.Count - 1].Time == speedPt.Time)
             _rawSpeeds.RemoveAt(_rawSpeeds.Count - 1);
         _rawSpeeds.Add(speedPt);
@@ -242,7 +242,7 @@ public class AGMovementData
     public Profiles CreateResampledProfiles()
     {
         if(_moves.Count != _rawSpeeds.Count)
-            Debug.LogError("_move¿Í _rawSpeedsÀÇ °³¼ö°¡ ´Ù¸¨´Ï´Ù. " + _moves.Count + " vs " + _rawSpeeds.Count);
+            Debug.LogError("_moveì™€ _rawSpeedsì˜ ê°œìˆ˜ê°€ ë‹¤ë¦…ë‹ˆë‹¤. " + _moves.Count + " vs " + _rawSpeeds.Count);
 
         if (_moves.Count == 0)
             return Profiles.Empty;

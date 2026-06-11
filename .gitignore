@@ -72,7 +72,9 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Log Files
-/[Aa]ssets/[Ll]og/*
+/[Aa]ssets/[_Ll]og/*
+/Tools/PerformanceAnalysis/trial_results/*
+/Tools/PerformanceAnalysis/output/*
 
 # Private references
 /_local_refs/

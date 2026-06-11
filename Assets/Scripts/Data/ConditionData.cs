@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * FittsStudy
  *
  *		Jacob O. Wobbrock, Ph.D.
@@ -46,7 +46,7 @@ using UnityEngine;
 namespace MouseLog
 {
     /// <summary>
-    /// Condition ¼ø¼­¸¦ ¹«ÀÛÀ§·Î ¼¯±â À§ÇÑ ÀÓ½Ã ±¸Á¶Ã¼ÀÔ´Ï´Ù.
+    /// Condition ìˆœì„œë¥¼ ë¬´ì‘ìœ„ë¡œ ì„ê¸° ìœ„í•œ ì„ì‹œ êµ¬ì¡°ì²´ì…ë‹ˆë‹¤.
     /// </summary>
     public struct ConditionConfig
     {
@@ -89,12 +89,12 @@ namespace MouseLog
 
             PointR center = new PointR((double)Screen.width / 2, (double)Screen.height / 2);
 
-            // ¿øº»¿¡¼­´Â 1D vs 2D Â÷ÀÌ¿¡ µû¶ó ´Ş¶óÁ³Áö¸¸ ¿©±â¼± Ç×»ó 2D
-            List<Target3D> targets = GameManager3D.Instance.targetManager.CreateTargets(index, trials, new ConditionConfig(A, W));
+            // ì›ë³¸ì—ì„œëŠ” 1D vs 2D ì°¨ì´ì— ë”°ë¼ ë‹¬ë¼ì¡Œì§€ë§Œ ì—¬ê¸°ì„  í•­ìƒ 2D
+            List<Target3D> targets = FittsManager.Instance.targetManager.CreateTargets(index, trials, new ConditionConfig(A, W));
 
             // Order the targets appropriately according to the ISO 9241-9 standard #########################################
             List<Target3D> orderedTargets = new List<Target3D>(targets.Count + 1);
-            if(trials % 2 == 0) // trial Â¦¼ö
+            if(trials % 2 == 0) // trial ì§ìˆ˜
             {
                 int k = trials / 2;
                 for (int i = 0; i < k; i ++)
@@ -104,17 +104,17 @@ namespace MouseLog
                     orderedTargets.Add(targets[idx1]); // 2i-th target
                     orderedTargets.Add(targets[idx2]); // (2i+1)-th target
                 }
-                orderedTargets.Add(targets[k]); // ¸¶Áö¸· Å¸°ÙÀº k¹øÂ° (Á¤ ¾Æ·¡¹æÇâ) Å¸°Ù°ú µ¿ÀÏ
+                orderedTargets.Add(targets[k]); // ë§ˆì§€ë§‰ íƒ€ê²Ÿì€ kë²ˆì§¸ (ì • ì•„ë˜ë°©í–¥) íƒ€ê²Ÿê³¼ ë™ì¼
 
             }
-            else // trial È¦¼ö
+            else // trial í™€ìˆ˜
             {
                 int k = (trials + 1) / 2;
                 for (int i = 0; i < k; i++)
                 {
                     int idx1 = i;
                     int idx2 = i + k;
-                    if(idx2 == trials) // ¸¶Áö¸· Å¸°ÙÀº Ã¹ ¹øÂ° Å¸°Ù°ú µ¿ÀÏ
+                    if(idx2 == trials) // ë§ˆì§€ë§‰ íƒ€ê²Ÿì€ ì²« ë²ˆì§¸ íƒ€ê²Ÿê³¼ ë™ì¼
                         idx2 = 0;
                     orderedTargets.Add(targets[idx1]); // 2i-th target
                     orderedTargets.Add(targets[idx2]); // (2i+1)-th target
@@ -161,7 +161,7 @@ namespace MouseLog
                 _trials[i].ClearData();
         }
 
-        public int NumTrials { get { return _trials.Count - 1; } } // index 0Àº ½ÃÀÛ trialÀÌ¹Ç·Î Á¦¿Ü
+        public int NumTrials { get { return _trials.Count - 1; } } // index 0ì€ ì‹œì‘ trialì´ë¯€ë¡œ ì œì™¸
 
         public int NumTestTrials
         {
@@ -215,7 +215,7 @@ namespace MouseLog
         #endregion
 
         #region Condition Values
-        //  ÇØ´ç regionÀº ¿øº» ÄÚµå ¿ø¹® 100% Àç»ç¿ë
+        //  í•´ë‹¹ regionì€ ì›ë³¸ ì½”ë“œ ì›ë¬¸ 100% ì¬ì‚¬ìš©
 
         /// <summary>
         /// Gets the 0-based block index number.
