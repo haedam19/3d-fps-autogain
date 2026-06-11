@@ -1,7 +1,9 @@
 {
     "groupNames":[
         "Reference",
-        "AutoGain"
+        "No-Kernel",
+        "Soft-Kernel",
+        "Hard-Kernel"
     ],
     "files":[
         [
@@ -11,9 +13,17 @@
         [
             "trial_results_20260611_160524.csv",
             "trial_results_20260611_162311.csv"
+        ],
+        [
+            "trial_results_20260611_233442.csv",
+            "trial_results_20260611_234021.csv"
+        ],
+        [
+            "trial_results_20260612_011215.csv",
+            "trial_results_20260612_011609.csv"
         ]
     ],
     "includePractice": false,
     "includeErrorTrials": false,
-    "windowSize": 50
+    "windowSize": 40
 }

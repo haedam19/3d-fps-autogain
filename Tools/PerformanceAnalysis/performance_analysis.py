@@ -228,6 +228,11 @@ def buildAnalysisData(config: dict[str, Any], inputDir: Path) -> dict[str, Any]:
         allRecords = readGroupTrials(groupName, config["files"][index], inputDir)
         filteredRecords = filterAndIndexTrials(allRecords, includePractice, includeErrorTrials)
         applyMovingAverage(filteredRecords, windowSize)
+        graphRecords = [
+            record
+            for record in filteredRecords
+            if record.analysisIndex is not None and record.analysisIndex >= windowSize - 1
+        ]
 
         groups.append(
             {
@@ -249,7 +254,7 @@ def buildAnalysisData(config: dict[str, Any], inputDir: Path) -> dict[str, Any]:
                         "performanceIndex": record.performanceIndex,
                         "movingAverage": record.movingAverage,
                     }
-                    for record in filteredRecords
+                    for record in graphRecords
                 ],
             }
         )

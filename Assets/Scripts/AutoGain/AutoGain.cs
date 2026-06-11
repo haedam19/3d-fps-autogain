@@ -9,7 +9,7 @@ using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class AutoGain
 {
-    public const int GainDataSchemaVersion = 1;
+    public const int GainDataSchemaVersion = 2;
 
     [System.Serializable]
     public class GainData
@@ -18,14 +18,22 @@ public class AutoGain
         public int totalUpdateCount;
         public int binCount;
         public double binSize;
+        public double[] kernel;
         public double[] gainCurve;
         public int[] binUpdateCount;
+    }
+
+    [System.Serializable]
+    private class SmoothKernelConfig
+    {
+        public double[] kernel;
     }
 
     // Constants
     // 마우스 정확도 향상 Off, 배율 1 기준 0~3000 counts/s 정도 크기
     public const int binCount = 64; // how many bins are there
     public const double binSize = 48f; // 속도 구간 크기(count / s)
+    double[] kernel;
     List<double> gainCurves;
     List<int> binUpdateCounter; 
     const double sensitivityInverseScaler = 100.0; // gain을 그대로 저장하면 자릿수가 너무 작아 100배 키워 저장. 사용시 1/100로 나눠서 사용.
@@ -47,7 +55,7 @@ public class AutoGain
 
     #region Log Fields
     // 로그 주기 설정
-    private const int RecordInterval = 25;
+    private const int RecordInterval = 40;
     private int _updateCount = 0;
 
     // 기간별 누적 카운터
@@ -77,6 +85,7 @@ public class AutoGain
             _updateCount = 0;
             gainCurves = new List<double>(binCount);
             binUpdateCounter = new List<int>(binCount);
+            kernel = LoadSmoothKernel();
             _gainLogs = new List<GainLogEntry>();
             for (int i = 0; i < binCount; i++)
             {
@@ -273,6 +282,7 @@ public class AutoGain
 
         // 5) Gain Curve 업데이트 & AimPoint (p) 업데이트
         bool[] updatedBin = new bool[binCount];
+        double[] gainChanges = new double[binCount];
         // 모든 submovements를 역순으로 순회하여, 
         // 동일한 빈에 두 번 이상 업데이트 되지 않도록 처리
         for (int i = submovements.Count - 1; i >= 0; i--)
@@ -303,9 +313,7 @@ public class AutoGain
                 if (sub.Si[j] && !updatedBin[j])
                 {
                     updatedBin[j] = true; // 해당 bin 업데이트 완료 표시
-                    double gainDelta = C * R;
-                    gainCurves[j] += gainDelta; // Gain Curve 업데이트
-                    gainCurves[j] = Math.Max(gainCurves[j], 0.1); // Gain은 0.1보다 작아질 수 없음
+                    gainChanges[j] += C * R;
                     binUpdateCounter[j]++;
                 }
             }
@@ -314,6 +322,7 @@ public class AutoGain
             submovements[i] = sub;
         }
 
+        ApplySmoothedGainChanges(gainChanges);
 
         // 6) 로그 기록
         _periodSubmovements += submovements.Count;
@@ -509,11 +518,40 @@ public class AutoGain
             totalUpdateCount = _updateCount,
             binCount = binCount,
             binSize = binSize,
+            kernel = kernel,
             gainCurve = GetGainCurve().ToArray(),
             binUpdateCount = GetBinUpdateCounters().ToArray()
         };
         string json = JsonUtility.ToJson(gainData, true);
         File.WriteAllText(filePath, json);
+    }
+
+    private double[] LoadSmoothKernel()
+    {
+        double[] fallBack = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 };
+        string path = Path.Combine(ProjectPaths.ConfigPath, "auto_gain_kernel.json");
+
+        if (!File.Exists(path))
+            return fallBack;
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            SmoothKernelConfig config = JsonUtility.FromJson<SmoothKernelConfig>(json);
+
+            if (config == null || !IsValidSmoothKernel(config.kernel))
+            {
+                Debug.LogWarning($"AutoGain kernel config is invalid. Fallback kernel will be used: {path}");
+                return fallBack;
+            }
+
+            return (double[])config.kernel.Clone();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"Failed to load AutoGain kernel config. Fallback kernel will be used: {ex.Message}");
+            return fallBack;
+        }
     }
 
     private bool TryLoadPreviousGainData(string continueSource)
@@ -565,16 +603,47 @@ public class AutoGain
             gainData.schemaVersion != GainDataSchemaVersion ||
             gainData.binCount != binCount ||
             gainData.binSize != binSize ||
+            !IsValidSmoothKernel(gainData.kernel) ||
             gainData.totalUpdateCount < 0 ||
             gainData.gainCurve == null || gainData.gainCurve.Length != binCount ||
             gainData.binUpdateCount == null || gainData.binUpdateCount.Length != binCount)
             return false;
 
+        kernel = (double[])gainData.kernel.Clone();
         _updateCount = gainData.totalUpdateCount;
         gainCurves = new List<double>(gainData.gainCurve);
         binUpdateCounter = new List<int>(gainData.binUpdateCount);
 
         return true;
+    }
+
+    private void ApplySmoothedGainChanges(double[] gainChanges)
+    {
+        if (gainChanges == null || gainChanges.Length != binCount || !IsValidSmoothKernel(kernel))
+            return;
+
+        int centerIndex = kernel.Length / 2;
+        for (int j = 0; j < binCount; j++)
+        {
+            double value = 0.0;
+            double kernelSum = 0.0;
+
+            for (int k = 0; k < kernel.Length; k++)
+            {
+                int sourceIndex = j + k - centerIndex;
+                if (sourceIndex < 0 || sourceIndex >= binCount)
+                    continue;
+
+                value += gainChanges[sourceIndex] * kernel[k];
+                kernelSum += kernel[k];
+            }
+
+            if (kernelSum <= 0.0)
+                continue;
+
+            gainCurves[j] += value / kernelSum;
+            gainCurves[j] = Math.Max(gainCurves[j], 0.1);
+        }
     }
 
     private bool TryLoadValidGainLog(string dirName, string sourceFolderName)
@@ -674,5 +743,23 @@ public class AutoGain
         headers.AddRange(Enumerable.Range(0, binCount).Select(i => $"bin{i}"));
         return string.Join(",", headers);
 
+    }
+
+    private bool IsValidSmoothKernel(double[] smoothKernel)
+    {
+        if (smoothKernel == null || smoothKernel.Length != 7)
+            return false;
+
+        double sum = 0.0;
+        for (int i = 0; i < smoothKernel.Length; i++)
+        {
+            double value = smoothKernel[i];
+            if (double.IsNaN(value) || double.IsInfinity(value) || value < 0.0)
+                return false;
+
+            sum += value;
+        }
+
+        return sum > 0.0;
     }
 }
